@@ -21,7 +21,7 @@ from tifffile import imwrite
 from model import UNet
 import datasets.custom_dataset
 from datasets.custom_dataset import get_dataloaders, CustomDataset
-from data_utils import custom_collate_fn, BinningTransform, PatchTransform, MAPPING
+from utils.data_utils import custom_collate_fn, BinningTransform, PatchTransform, MAPPING
 
     
 def dice_loss(pred, target, smooth=1.):

@@ -11,7 +11,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-from data_utils import MAPPING, custom_collate_fn, BinningTransform, PatchTransform
+from utils.data_utils import MAPPING, custom_collate_fn, BinningTransform, PatchTransform
 from torch.utils.data import random_split
 
 

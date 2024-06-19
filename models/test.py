@@ -8,8 +8,8 @@ import time
 import copy
 from model import UNet
 from datasets.custom_dataset import get_dataloaders, CustomDataset
-from data_utils import BinningTransform
-from heatmap_utils import visualize_heatmaps, visualize_colored_heatmaps
+from utils.data_utils import BinningTransform
+from utils.heatmap_utils import visualize_heatmaps, visualize_colored_heatmaps
 from torchvision.transforms import v2 
 import datasets.custom_dataset
 
