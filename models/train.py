@@ -19,8 +19,8 @@ import copy
 from PIL import Image
 from tifffile import imwrite
 from model import UNet
-import datasets.custom_dataset
-from datasets.custom_dataset import get_dataloaders, CustomDataset
+import datasets.Geometry_dataset
+from datasets.Geometry_dataset import get_dataloaders, CustomDataset
 from utils.data_utils import custom_collate_fn, BinningTransform, PatchTransform, MAPPING
 from utils.heatmap_utils import visualize_colored_heatmaps
 
@@ -72,8 +72,12 @@ def train_model(model, optimizer, scheduler, num_epochs):
 
         since = time.time()
 
-
         for phase in ['train', 'val']:
+
+            if phase == 'train':
+                model.train()
+            else:
+                model.eval()
 
             metrics = defaultdict(float)
             epoch_samples = 0
@@ -99,34 +103,30 @@ def train_model(model, optimizer, scheduler, num_epochs):
                 if i > 0:  # Nur einen Batch pro Epoche verwenden
                     break
                 inputs = inputs.to(device)
-                masks_tensor = masks_tensor.to(device)
+                #masks_tensor = masks_tensor.to(device)
+                combined_mask = combined_mask.to(device)
 
                 optimizer.zero_grad()
 
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
-                    loss = calc_loss(outputs, masks_tensor, metrics)
+                    loss = calc_loss(outputs, combined_mask, metrics)
 
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
+                        scheduler.step()
+                        for param_group in optimizer.param_groups:
+                            print("LR", param_group['lr'])
 
                 epoch_samples += inputs.size(0)
 
                 if phase == 'val':
                     preds = torch.sigmoid(outputs)
                     preds = (preds > 0.5).float()
-                    visualize_colored_heatmaps(inputs, preds, combined_masks)
-            
-            if phase == 'train':
-                scheduler.step()
-                for param_group in optimizer.param_groups:
-                    print("LR", param_group['lr'])
 
-                model.train()
-            else:
-                model.eval()
-
+                    for j in range(preds.size(0)):  # Für jede Instanz im Batch
+                        visualize_colored_heatmaps(inputs[j].unsqueeze(0), preds[j].unsqueeze(0), masks_tensor[j].unsqueeze(0))
 
             print_metrics(metrics, epoch_samples, phase)
             epoch_loss = metrics['loss'] / epoch_samples
@@ -169,7 +169,7 @@ def run(UNet):
 
     # # Create another simulation dataset for test
     test_dataset = CustomDataset('data', transform=trans,mapping=MAPPING)
-    test_loader = datasets.custom_dataset.DataLoader(test_dataset, batch_size=4, shuffle=True,collate_fn=custom_collate_fn)
+    test_loader = datasets.Geometry_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True,collate_fn=custom_collate_fn)
 
     inputs, labels, combined_mask = next(iter(test_loader))
     inputs = inputs.to(device)

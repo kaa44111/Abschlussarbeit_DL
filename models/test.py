@@ -7,11 +7,11 @@ from collections import defaultdict
 import time
 import copy
 from model import UNet
-from datasets.custom_dataset import get_dataloaders, CustomDataset
+from datasets.Geometry_dataset import get_dataloaders, CustomDataset
 from utils.data_utils import BinningTransform
 from utils.heatmap_utils import visualize_heatmaps, visualize_colored_heatmaps
 from torchvision.transforms import v2 
-import datasets.custom_dataset
+import datasets.Geometry_dataset
 
 
 
@@ -132,7 +132,7 @@ def run():
     ])
 
     test_dataset = CustomDataset('data', transform=trans, mapping=None)
-    test_loader = datasets.custom_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
+    test_loader = datasets.Geometry_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
     inputs, labels = next(iter(test_loader))
     inputs = inputs.to(device)

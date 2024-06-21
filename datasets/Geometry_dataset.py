@@ -21,8 +21,8 @@ class CustomDataset(Dataset):
         self.transform = transform
 
         # Pfade zu den Bildern und Masken
-        self.image_folder = os.path.join(root_dir, 'train', 'grabs')
-        self.mask_folder = os.path.join(root_dir, 'train', 'masks')
+        self.image_folder = os.path.join(root_dir, 'geometry_shapes', 'grabs')
+        self.mask_folder = os.path.join(root_dir, 'geometry_shapes', 'masks')
 
         self.image_files = sorted(os.listdir(self.image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
         self.mask_files = sorted(os.listdir(self.mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
