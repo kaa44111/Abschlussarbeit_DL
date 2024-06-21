@@ -22,6 +22,7 @@ from model import UNet
 import datasets.custom_dataset
 from datasets.custom_dataset import get_dataloaders, CustomDataset
 from utils.data_utils import custom_collate_fn, BinningTransform, PatchTransform, MAPPING
+from utils.heatmap_utils import visualize_colored_heatmaps
 
     
 def dice_loss(pred, target, smooth=1.):
@@ -77,35 +78,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
             metrics = defaultdict(float)
             epoch_samples = 0
 
-            for inputs, labels in dataloaders[phase]:
-                inputs = inputs.to(device)
-                labels = labels.to(device)
-
-                optimizer.zero_grad()
-
-                with torch.set_grad_enabled(phase == 'train'):
-                    outputs = model(inputs)
-                    loss = calc_loss(outputs, labels, metrics)
-
-                    if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
-
-                epoch_samples += inputs.size(0)
-                
-            if phase == 'train':
-                scheduler.step()
-                for param_group in optimizer.param_groups:
-                    print("LR", param_group['lr'])
-
-                model.train()
-            else:
-                model.eval()
-
-            # # Nur einen Batch pro Epoche verwenden
-            # for i, (inputs, labels) in enumerate(dataloaders[phase]):
-            #     if i > 0:
-            #         break
+            # for inputs, labels, _ in dataloaders[phase]:
             #     inputs = inputs.to(device)
             #     labels = labels.to(device)
 
@@ -120,6 +93,40 @@ def train_model(model, optimizer, scheduler, num_epochs):
             #             optimizer.step()
 
             #     epoch_samples += inputs.size(0)
+
+            # Nur einen Batch pro Epoche verwenden
+            for i, (inputs, masks_tensor, combined_masks) in enumerate(dataloaders[phase]):
+                if i > 0:  # Nur einen Batch pro Epoche verwenden
+                    break
+                inputs = inputs.to(device)
+                masks_tensor = masks_tensor.to(device)
+
+                optimizer.zero_grad()
+
+                with torch.set_grad_enabled(phase == 'train'):
+                    outputs = model(inputs)
+                    loss = calc_loss(outputs, masks_tensor, metrics)
+
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
+
+                epoch_samples += inputs.size(0)
+
+                if phase == 'val':
+                    preds = torch.sigmoid(outputs)
+                    preds = (preds > 0.5).float()
+                    visualize_colored_heatmaps(inputs, preds, combined_masks)
+            
+            if phase == 'train':
+                scheduler.step()
+                for param_group in optimizer.param_groups:
+                    print("LR", param_group['lr'])
+
+                model.train()
+            else:
+                model.eval()
+
 
             print_metrics(metrics, epoch_samples, phase)
             epoch_loss = metrics['loss'] / epoch_samples
@@ -139,7 +146,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
 
 
 def run(UNet):
-    num_class = 1
+    num_class = 6
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
@@ -164,25 +171,17 @@ def run(UNet):
     test_dataset = CustomDataset('data', transform=trans,mapping=MAPPING)
     test_loader = datasets.custom_dataset.DataLoader(test_dataset, batch_size=4, shuffle=True,collate_fn=custom_collate_fn)
 
-    inputs, labels = next(iter(test_loader))
+    inputs, labels, combined_mask = next(iter(test_loader))
     inputs = inputs.to(device)
     labels = labels.to(device)
 
     pred = model(inputs)
     pred = F.sigmoid(pred)
-    pred = pred.data.cpu().numpy()
+    pred = (pred > 0.5).float()
     print(pred.shape)
 
-    # # Change channel-order and make 3 channels for matplot
-    # input_images_rgb = [GenerateData.reverse_transform(x) for x in inputs.cpu()]
-    
-    # # Map each channel (i.e. class) to each color
-    # target_masks_rgb = [GenerateData.masks_to_colorimg(x) for x in labels.cpu().numpy()]
-    
-    # pred_rgb = [GenerateData.masks_to_colorimg(x) for x in pred]
-    
-
-    # GenerateData.plot_side_by_side([input_images_rgb, target_masks_rgb, pred_rgb])
+     # Visualisieren der Heatmaps
+    #visualize_colored_heatmaps(inputs, pred, combined_mask)
 
 if __name__ == '__main__':
     try:

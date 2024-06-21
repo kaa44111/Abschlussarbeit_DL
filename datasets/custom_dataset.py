@@ -53,13 +53,15 @@ class CustomDataset(Dataset):
                 else:
                     combined_mask[mask > 0] = i+1  # Use index if no mapping is provided
 
-
             if self.transform:
                 image = self.transform(image)
                 combined_mask = self.transform(combined_mask)
-                #masks = [self.transform(mask) for mask in masks]
+                masks = [self.transform(mask) for mask in masks]
 
-            return image, combined_mask #, masks
+            masks_tensor = torch.stack(masks, dim=0)  # Erzeugt einen Tensor der Form [6, 1, H, W]
+            masks_tensor = masks_tensor.squeeze(1)  # Ändert die Form zu [6, H, W]
+
+            return image, masks_tensor, combined_mask
         
         except Exception as e:
             print(f"Error loading data at index {idx}: {e}")
@@ -109,10 +111,10 @@ if __name__ == '__main__':
         # Beispiel für den direkten Zugriff auf das erste Batch
         batch = next(iter(dataloader['train']))
 
-        images, combined_masks = batch
+        images, masks, combined_masks = batch
         print(images.shape)
         print(combined_masks.shape)
-        #print(len(masks), masks[0].shape)
+        print(len(masks[0]), masks.shape)
 
 
         #   # Optional: visualize the first sample in the batch

@@ -12,6 +12,22 @@ MAPPING = {
     'form_5': 6
 }
 
+def custom_collate_fn(batch):
+    """
+    Custom collate function for DataLoader.
+    This function assumes each item in batch is a tuple (image, masks, combined_mask).
+    """
+
+    # Filter out any None values (in case of any loading errors)
+    batch = [item for item in batch if item[0] is not None]
+
+    images, masks, combined_masks = zip(*batch)
+    batched_images = torch.stack(images)
+    batched_combined_masks = torch.stack(combined_masks)
+    batched_masks = torch.stack(masks)
+    
+    return batched_images, batched_masks, batched_combined_masks
+
 # def custom_collate_fn(batch):
 #     """
 #     Custom collate function for DataLoader.
@@ -21,29 +37,11 @@ MAPPING = {
 #     # Filter out any None values (in case of any loading errors)
 #     batch = [item for item in batch if item[0] is not None]
 
-#     images, combined_masks, masks_list = zip(*batch)
+#     images, combined_masks = zip(*batch)
 #     batched_images = torch.stack(images)
 #     batched_combined_masks = torch.stack(combined_masks)
     
-#     # Transpose the list of lists into a list of batches
-#     batched_masks = [torch.stack(mask_set) for mask_set in zip(*masks_list)]
-    
-#     return batched_images, batched_combined_masks, batched_masks
-
-def custom_collate_fn(batch):
-    """
-    Custom collate function for DataLoader.
-    This function assumes each item in batch is a tuple (image, combined_mask, masks).
-    """
-
-    # Filter out any None values (in case of any loading errors)
-    batch = [item for item in batch if item[0] is not None]
-
-    images, combined_masks = zip(*batch)
-    batched_images = torch.stack(images)
-    batched_combined_masks = torch.stack(combined_masks)
-    
-    return batched_images, batched_combined_masks
+#     return batched_images, batched_combined_masks
 
 class BinningTransform(torch.nn.Module):
     def __init__(self, bin_size):
