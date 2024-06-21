@@ -61,7 +61,7 @@ class CustomDataset(Dataset):
             masks_tensor = torch.stack(masks, dim=0)  # Erzeugt einen Tensor der Form [6, 1, H, W]
             masks_tensor = masks_tensor.squeeze(1)  # Ändert die Form zu [6, H, W]
 
-            return image, masks_tensor, combined_mask
+            return image, combined_mask, masks_tensor
         
         except Exception as e:
             print(f"Error loading data at index {idx}: {e}")

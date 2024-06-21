@@ -9,9 +9,11 @@ import copy
 from model import UNet
 from datasets.Geometry_dataset import get_dataloaders, CustomDataset
 from utils.data_utils import BinningTransform
-from utils.heatmap_utils import visualize_heatmaps, visualize_colored_heatmaps
+from utils.heatmap_utils import visualize_colored_heatmaps
 from torchvision.transforms import v2 
 import datasets.Geometry_dataset
+import seaborn as sns
+import matplotlib as plt
 
 
 
@@ -64,7 +66,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
             metrics = defaultdict(float)
             epoch_samples = 0
 
-            for i, (inputs, labels) in enumerate(dataloaders[phase]):
+            for i, (inputs, labels, _) in enumerate(dataloaders[phase]):
                 if i > 0:  # Nur einen Batch pro Epoche verwenden
                     break
                 inputs = inputs.to(device)
@@ -85,7 +87,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
                 if phase == 'val':
                     preds = torch.sigmoid(outputs)
                     preds = (preds > 0.5).float()
-                    visualize_colored_heatmaps(inputs, preds, labels)
+                    #visualize_colored_heatmaps(inputs, preds, labels)
             
             if phase == 'train':
                 scheduler.step()
@@ -134,14 +136,15 @@ def run():
     test_dataset = CustomDataset('data', transform=trans, mapping=None)
     test_loader = datasets.Geometry_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
-    inputs, labels = next(iter(test_loader))
+    inputs, labels, _ = next(iter(test_loader))
     inputs = inputs.to(device)
     labels = labels.to(device)
 
     pred = model(inputs)
     pred = F.sigmoid(pred)
     pred = pred.data.cpu().numpy()
-    #visualize_colored_heatmaps(inputs, pred, labels)
+    plt.show()
+   # visualize_colored_heatmaps(inputs, pred, labels)
     print(pred.shape)
 
 if __name__ == "__main__":
@@ -150,3 +153,5 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
+

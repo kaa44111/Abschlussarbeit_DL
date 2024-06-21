@@ -99,18 +99,18 @@ def train_model(model, optimizer, scheduler, num_epochs):
             #     epoch_samples += inputs.size(0)
 
             # Nur einen Batch pro Epoche verwenden
-            for i, (inputs, masks_tensor, combined_masks) in enumerate(dataloaders[phase]):
+            for i, (inputs, _ , masks_tensor) in enumerate(dataloaders[phase]):
                 if i > 0:  # Nur einen Batch pro Epoche verwenden
                     break
                 inputs = inputs.to(device)
-                #masks_tensor = masks_tensor.to(device)
-                combined_mask = combined_mask.to(device)
+                masks_tensor = masks_tensor.to(device)
+                #combined_mask = combined_mask.to(device)
 
                 optimizer.zero_grad()
 
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
-                    loss = calc_loss(outputs, combined_mask, metrics)
+                    loss = calc_loss(outputs, masks_tensor, metrics)
 
                     if phase == 'train':
                         loss.backward()
@@ -125,8 +125,10 @@ def train_model(model, optimizer, scheduler, num_epochs):
                     preds = torch.sigmoid(outputs)
                     preds = (preds > 0.5).float()
 
-                    for j in range(preds.size(0)):  # Für jede Instanz im Batch
-                        visualize_colored_heatmaps(inputs[j].unsqueeze(0), preds[j].unsqueeze(0), masks_tensor[j].unsqueeze(0))
+                    visualize_colored_heatmaps(inputs, preds, masks_tensor)
+
+                    # for j in range(preds.size(0)):  # Für jede Instanz im Batch
+                    #     visualize_colored_heatmaps(inputs[j].unsqueeze(0), preds[j].unsqueeze(0), masks_tensor[j].unsqueeze(0))
 
             print_metrics(metrics, epoch_samples, phase)
             epoch_loss = metrics['loss'] / epoch_samples
