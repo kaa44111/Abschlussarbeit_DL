@@ -28,4 +28,4 @@ src_folder = 'data/geometry_shapes/masks'
 dest_folder = 'data/geometry_shapes/mask_circle'
 file_suffix = '1'  # Ersetzen Sie dies durch das tatsächliche Label des Features
 
-copy_feature_masks(src_folder, dest_folder, file_suffix)
+# copy_feature_masks(src_folder, dest_folder, file_suffix)
