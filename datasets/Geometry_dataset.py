@@ -1,9 +1,12 @@
-import os
 import sys
-import torch
+import os
 
-from torchvision.io import read_image
-from torchvision.ops.boxes import masks_to_boxes
+# Initialisierung des PYTHONPATH
+project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_path not in sys.path:
+    sys.path.append(project_path)
+    
+import torch
 from torchvision import tv_tensors
 from torchvision.transforms import v2
 from torch.utils.data import Dataset, DataLoader
