@@ -1,41 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+import seaborn as sns
+from PIL import Image
 
-def create_heatmap(pred, target):
-    """Erstellt eine Heatmap, die die Übereinstimmung zwischen Vorhersagen und Zielwerten zeigt."""
-    heatmap = np.zeros_like(pred, dtype=np.float32)
-    heatmap[pred == target] = 1  # Richtig klassifizierte Pixel
-    return heatmap
+def generate(pred):
+        # Create heatmap image in red channel
+    heatmap = torch.empty(1, 252, 271).uniform_(0, 1)
+    heatmap = torch.cat((heatmap, torch.zeros(2, 252, 271)))
 
-def visualize_heatmaps(images, preds, targets):
-    """Visualisiert die Bilder, Vorhersagen, Zielwerte und Heatmaps."""
-    batch_size = images.shape[0]
-    
-    for i in range(batch_size):
-        img = images[i].permute(1, 2, 0).cpu().numpy()
-        pred = preds[i].squeeze().cpu().numpy()
-        target = targets[i].squeeze().cpu().numpy()
-        heatmap = create_heatmap(pred, target)
-        
-        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
-        
-        axes[0].imshow(img)
-        axes[0].set_title('Image')
-        
-        axes[1].imshow(pred, cmap='gray')
-        axes[1].set_title('Prediction')
-        
-        axes[2].imshow(target, cmap='gray')
-        axes[2].set_title('Target')
-        
-        axes[3].imshow(heatmap, cmap='hot', interpolation='nearest')
-        axes[3].set_title('Heatmap')
-        
-        for ax in axes:
-            ax.axis('off')
-        
-        plt.show()
+    import torchvision.transforms.functional as TF
+    img = TF.to_pil_image(x)  # assuming your image in x
+    h_img = TF.to_pil_image(heatmap)
+
+    res = Image.blend(img, h_img, 0.5)
 
 def create_colored_heatmap(pred, target):
     """Erstellt eine farbige Heatmap, die die Übereinstimmung zwischen Vorhersagen und Zielwerten zeigt."""

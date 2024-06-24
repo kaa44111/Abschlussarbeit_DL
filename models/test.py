@@ -87,7 +87,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
                 if phase == 'val':
                     preds = torch.sigmoid(outputs)
                     preds = (preds > 0.5).float()
-                    #visualize_colored_heatmaps(inputs, preds, labels)
+                    visualize_colored_heatmaps(inputs, preds, labels)
             
             if phase == 'train':
                 scheduler.step()
