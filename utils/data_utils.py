@@ -59,26 +59,36 @@ class PatchTransform(torch.nn.Module):
         return patches
     
 def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
-    if not os.path.exists(train_dir):
-        os.makedirs(train_dir)
-    if not os.path.exists(val_dir):
-        os.makedirs(val_dir)
-        
+    # Erstellen der Zielordner
+    for dir in [train_dir, val_dir]:
+        grabs_dir = os.path.join(dir, 'grabs')
+        masks_dir = os.path.join(dir, 'masks')
+        os.makedirs(grabs_dir, exist_ok=True)
+        os.makedirs(masks_dir, exist_ok=True)
+    
+    # Pfade zu den Bilder- und Maskenordnern
     image_folder = os.path.join(root_dir, 'grabs')
     mask_folder = os.path.join(root_dir, 'masks')
     
+    # Listen der Bild- und Maskendateien
     image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
     mask_files = sorted(os.listdir(mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
     
-    train_images, val_images, train_masks, val_masks = train_test_split(
-        image_files, mask_files, test_size=test_size, random_state=random_state)
+    # Aufteilen der Daten in Trainings- und Validierungssätze
+    train_images, val_images = train_test_split(image_files, test_size=test_size, random_state=random_state, shuffle=False)
 
+    # Kopieren der Trainingsdaten
     for image_file in train_images:
         shutil.copy(os.path.join(image_folder, image_file), os.path.join(train_dir, 'grabs', image_file))
-    for mask_file in train_masks:
-        shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(train_dir, 'masks', mask_file))
-        
+        # Annahme, dass die Maske denselben Namen wie das Bild hat, jedoch mit einer Endung von 1
+        mask_file = image_file.split('.')[0] + '1.png'
+        if os.path.exists(os.path.join(mask_folder, mask_file)):
+            shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(train_dir, 'masks', mask_file))
+
+    # Kopieren der Validierungsdaten
     for image_file in val_images:
         shutil.copy(os.path.join(image_folder, image_file), os.path.join(val_dir, 'grabs', image_file))
-    for mask_file in val_masks:
-        shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(val_dir, 'masks', mask_file))
+        # Annahme, dass die Maske denselben Namen wie das Bild hat, jedoch mit einer Endung von 1
+        mask_file = image_file.split('.')[0] + '1.png'
+        if os.path.exists(os.path.join(mask_folder, mask_file)):
+            shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(val_dir, 'masks', mask_file))
