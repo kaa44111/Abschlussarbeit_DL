@@ -5,7 +5,7 @@ import os
 project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_path not in sys.path:
     sys.path.append(project_path)
-    
+
 import torch
 from torchvision import tv_tensors
 from torchvision.transforms import v2
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         # Beispiel für den direkten Zugriff auf das erste Batch
         batch = next(iter(dataloader['train']))
 
-        images, masks, combined_masks = batch
+        images, combined_masks, masks = batch
         print(images.shape)
         print(combined_masks.shape)
         print(len(masks[0]), masks.shape)
