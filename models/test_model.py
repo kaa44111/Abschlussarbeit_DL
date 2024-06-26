@@ -21,7 +21,7 @@ def test(UNet):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('best_model.pth'))
+    model.load_state_dict(torch.load('best_model.pth', map_location=device))
     model.eval()
 
     trans = v2.Compose([
