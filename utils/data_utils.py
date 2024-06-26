@@ -57,6 +57,7 @@ class PatchTransform(torch.nn.Module):
         patches = patches.contiguous().view(C, -1, self.patch_size, self.patch_size)
         patches = patches.permute(1, 0, 2, 3)  # [num_patches, C, patch_size, patch_size]
         return patches
+
     
 def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
     """
@@ -99,3 +100,18 @@ def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
         mask_file = image_file.split('.')[0] + '1.png'
         if os.path.exists(os.path.join(mask_folder, mask_file)):
             shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(val_dir, 'masks', mask_file))
+
+
+def rename_masks(mask_folder):
+    '''
+    Gives Masks the same prefix as the Image name
+    '''
+    mask_files = sorted(os.listdir(mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+    
+    for mask_file in mask_files:
+        base_name = mask_file.split('.')[0]
+        if base_name.endswith('1'):
+            new_base_name = str(int(base_name[:-1]) - 1).zfill(len(base_name) - 1) + '1'
+            new_mask_name = new_base_name + '.png'
+            os.rename(os.path.join(mask_folder, mask_file), os.path.join(mask_folder, new_mask_name))
+            print(f"Renamed {mask_file} to {new_mask_name}")
