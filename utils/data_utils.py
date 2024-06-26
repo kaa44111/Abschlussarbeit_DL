@@ -59,6 +59,13 @@ class PatchTransform(torch.nn.Module):
         return patches
     
 def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
+    """
+    Split Data into test and validate folders
+    Example:
+        root_dir = 'data/geometry_shapes'
+        train_dir = 'data/circle_data/train'
+        val_dir = 'data/circle_data/val'
+    """
     # Erstellen der Zielordner
     for dir in [train_dir, val_dir]:
         grabs_dir = os.path.join(dir, 'grabs')
