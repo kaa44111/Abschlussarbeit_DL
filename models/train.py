@@ -1,30 +1,15 @@
 import torch
-import os
-import torch.nn as nn
-from torch.nn.functional import relu
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import torch.nn.functional as F
 import torch.utils
-from torchvision.transforms import v2 
-from torchvision.utils import save_image
-import numpy as np
-from functools import reduce
 from collections import defaultdict
-import matplotlib.pyplot as plt
-import random
-import itertools
 import time
 import copy
-from PIL import Image
-from tifffile import imwrite
 from model import UNet
-import datasets.Geometry_dataset
-from datasets.Geometry_dataset import get_dataloaders, CustomDataset
-from utils.data_utils import custom_collate_fn, BinningTransform, PatchTransform, MAPPING
-from utils.heatmap_utils import visualize_colored_heatmaps
+from datasets.Geometry_dataset import get_dataloaders
 
-    
+      
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
     target = target.contiguous()
@@ -72,9 +57,13 @@ def train_model(model, optimizer, scheduler, num_epochs):
 
         since = time.time()
 
-        for phase in ['train', 'val']:
 
+        for phase in ['train', 'val']:
             if phase == 'train':
+                scheduler.step()
+                for param_group in optimizer.param_groups:
+                    print("LR", param_group['lr'])
+
                 model.train()
             else:
                 model.eval()
@@ -82,53 +71,21 @@ def train_model(model, optimizer, scheduler, num_epochs):
             metrics = defaultdict(float)
             epoch_samples = 0
 
-            # for inputs, labels, _ in dataloaders[phase]:
-            #     inputs = inputs.to(device)
-            #     labels = labels.to(device)
-
-            #     optimizer.zero_grad()
-
-            #     with torch.set_grad_enabled(phase == 'train'):
-            #         outputs = model(inputs)
-            #         loss = calc_loss(outputs, labels, metrics)
-
-            #         if phase == 'train':
-            #             loss.backward()
-            #             optimizer.step()
-
-            #     epoch_samples += inputs.size(0)
-
-            # Nur einen Batch pro Epoche verwenden
-            for i, (inputs, _ , masks_tensor) in enumerate(dataloaders[phase]):
-                if i > 0:  # Nur einen Batch pro Epoche verwenden
-                    break
+            for inputs,_, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
-                masks_tensor = masks_tensor.to(device)
-                #combined_mask = combined_mask.to(device)
+                labels = labels.to(device)
 
                 optimizer.zero_grad()
 
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
-                    loss = calc_loss(outputs, masks_tensor, metrics)
+                    loss = calc_loss(outputs, labels, metrics)
 
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-                        scheduler.step()
-                        for param_group in optimizer.param_groups:
-                            print("LR", param_group['lr'])
 
                 epoch_samples += inputs.size(0)
-
-                if phase == 'val':
-                    preds = torch.sigmoid(outputs)
-                    preds = (preds > 0.5).float()
-
-                    visualize_colored_heatmaps(inputs, preds, masks_tensor)
-
-                    # for j in range(preds.size(0)):  # Für jede Instanz im Batch
-                    #     visualize_colored_heatmaps(inputs[j].unsqueeze(0), preds[j].unsqueeze(0), masks_tensor[j].unsqueeze(0))
 
             print_metrics(metrics, epoch_samples, phase)
             epoch_loss = metrics['loss'] / epoch_samples
@@ -153,41 +110,27 @@ def run(UNet):
     
     model = UNet(num_class).to(device)
 
-#Optimizer
     optimizer_ft = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=1)
+    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=75)
 
-    model.eval()
-
-    trans = v2.Compose([
-    v2.ToPureTensor(),
-    BinningTransform(bin_size=2),  # Beispiel für Binning mit bin_size 2
-    v2.ToDtype(torch.float32, scale=True),
-    #PatchTransform(patch_size=64),  # Beispiel für das Aufteilen in Patches der Größe 64x64
-    ])
-
-    # # Create another simulation dataset for test
-    test_dataset = CustomDataset('data', transform=trans,mapping=MAPPING)
-    test_loader = datasets.Geometry_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True,collate_fn=custom_collate_fn)
-
-    inputs, labels, combined_mask = next(iter(test_loader))
-    inputs = inputs.to(device)
-    labels = labels.to(device)
-
-    pred = model(inputs)
-    pred = F.sigmoid(pred)
-    pred = (pred > 0.5).float()
-    print(pred.shape)
-
-     # Visualisieren der Heatmaps
-    #visualize_colored_heatmaps(inputs, pred, combined_mask)
+    # Speichern des trainierten Modells
+    torch.save(model.state_dict(), 'best_model.pth')
+    print("Model saved to best_model.pth")
 
 if __name__ == '__main__':
     try:
         run(UNet)
-
     except Exception as e:
         print(f"An error occurred: {e}")
+
+############
+
+# num_class = 6
+# device = gpu
+# lr=1e-4
+# epochs=35
+# batchsize=30
+# trainset = 100, valset = 20
