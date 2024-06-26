@@ -102,16 +102,24 @@ def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
             shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(val_dir, 'masks', mask_file))
 
 
-def rename_masks(mask_folder):
+def rename_masks(mask_folder,image_folder):
     '''
     Gives Masks the same prefix as the Image name
     '''
     mask_files = sorted(os.listdir(mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+    image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+
+    if len(image_files) != len(mask_files):
+        print("Number of images and masks do not match. Please check your files.")
+        return
     
-    for mask_file in mask_files:
-        base_name = mask_file.split('.')[0]
-        if base_name.endswith('1'):
-            new_base_name = str(int(base_name[:-1]) - 1).zfill(len(base_name) - 1) + '1'
-            new_mask_name = new_base_name + '.png'
-            os.rename(os.path.join(mask_folder, mask_file), os.path.join(mask_folder, new_mask_name))
-            print(f"Renamed {mask_file} to {new_mask_name}")
+    for i, image_file in enumerate(image_files):
+        base_name = image_file.split('.')[0]
+        new_mask_name = f"{base_name}1.png"
+        old_mask_name = mask_files[i]
+        old_mask_path = os.path.join(mask_folder, old_mask_name)
+        new_mask_path = os.path.join(mask_folder, new_mask_name)
+        
+        if os.path.exists(old_mask_path):
+            os.rename(old_mask_path, new_mask_path)
+            print(f"Renamed {old_mask_name} to {new_mask_name}")
