@@ -120,11 +120,11 @@ def run(UNet):
     torch.save(model.state_dict(), 'best_model.pth')
     print("Model saved to best_model.pth")
 
-if __name__ == '__main__':
-    try:
-        run(UNet)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+# if __name__ == '__main__':
+#     try:
+#         run(UNet)
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
 
 ############
 
