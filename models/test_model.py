@@ -44,8 +44,8 @@ def test(UNet):
     # Visualisieren der Vorhersagen und Heatmaps
     visualize_predictions(pred, masks_tensor)
 
-if __name__ == '__main__':
-    try:
-        test(UNet)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+# if __name__ == '__main__':
+#     try:
+#         test(UNet)
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
