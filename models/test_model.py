@@ -7,16 +7,14 @@ if project_path not in sys.path:
     sys.path.append(project_path)
 
 import torch
-import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from utils.data_utils import MAPPING,custom_collate_fn
 from model import UNet
 from datasets.Geometry_dataset import CustomDataset
 from utils.data_utils import BinningTransform
-from utils.heatmap_utils import visualize_colored_heatmaps
+from utils.heatmap_utils import visualize_predictions
 from torchvision.transforms import v2 
-import seaborn as sns
 
 def test(UNet):
     num_class = 6
@@ -36,17 +34,15 @@ def test(UNet):
     test_dataset = CustomDataset('data', transform=trans, mapping=MAPPING)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=True, collate_fn=custom_collate_fn)
 
-    inputs, _, labels = next(iter(test_loader))
-    inputs = inputs.to(device)
-    labels = labels.to(device)
+    images, _ , masks_tensor = next(iter(test_loader))
+    images = images.to(device)
+    masks_tensor = masks_tensor.to(device)
 
-    pred = model(inputs)
+    pred = model(images)
     pred = F.sigmoid(pred)
-    pred = pred.view_as(labels)  # Anpassung der Größe der Vorhersagen
-    print(pred.shape)
 
-    # Visualisieren der Heatmaps
-    visualize_colored_heatmaps(inputs, pred, labels)
+    # Visualisieren der Vorhersagen und Heatmaps
+    visualize_predictions(pred, masks_tensor)
 
 if __name__ == '__main__':
     try:
