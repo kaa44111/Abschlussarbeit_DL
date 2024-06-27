@@ -105,7 +105,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
 
 
 def run(UNet):
-    num_class = 6
+    num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
@@ -120,11 +120,11 @@ def run(UNet):
     torch.save(model.state_dict(), 'OneFeature_model.pth')
     print("Model saved to OneFeature_model.pth")
 
-# if __name__ == '__main__':
-#     try:
-#         run(UNet)
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
+if __name__ == '__main__':
+    try:
+        run(UNet)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 ############
 
