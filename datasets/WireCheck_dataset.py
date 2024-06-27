@@ -82,7 +82,7 @@ class CustomDataset(Dataset):
 
         # Pfade zu den Bildern und Masken
         self.image_folder = os.path.join(root_dir, 'grabs')
-        self.mask_folder = os.path.join(root_dir, 'mask_circle')
+        self.mask_folder = os.path.join(root_dir, 'masks')
 
         # Sortieren der Dateien numerisch basierend auf den Ziffern im Dateinamen
         self.image_files = sorted(os.listdir(self.image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
@@ -98,14 +98,15 @@ class CustomDataset(Dataset):
         try:
             # Laden des Bildes
             img_name = os.path.join(self.image_folder, self.image_files[idx])
-            image = Image.open(img_name).convert('RGB')
+            image = Image.open(img_name).convert('L')
             image = tv_tensors.Image(image)
 
             # Laden der Maske für dieses Bild
             mask_name = os.path.join(self.mask_folder, f"{self.image_files[idx+1].split('.')[0]}1.png")
             mask = Image.open(mask_name).convert('L')
-            mask = tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0)
-            
+            #mask = tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0)
+            mask = tv_tensors.Mask(mask)
+
             if self.transform:
                 image = self.transform(image)
                 mask = self.transform(mask)
@@ -121,11 +122,11 @@ if __name__ == '__main__':
         transformations = v2.Compose([
             v2.ToPureTensor(),
             BinningTransform(2),
-            PatchTransform(30),
+            #PatchTransform(30),
             v2.ToDtype(torch.float32, scale=True),
         ])
         
-        dataset = CustomDataset(root_dir='data/geometry_shapes',transform=transformations)
+        dataset = CustomDataset(root_dir='data/circle_data/train',transform=transformations)
         image, masks_tensor = dataset[0]
         if image is not None and masks_tensor is not None:
             print(image.shape)
