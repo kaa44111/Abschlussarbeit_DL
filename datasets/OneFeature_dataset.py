@@ -43,10 +43,10 @@ class CustomDataset(Dataset):
             image = tv_tensors.Image(image)
 
             # Laden der Maske für dieses Bild
-            mask_name = os.path.join(self.mask_folder, f"{self.image_files[idx+1].split('.')[0]}1.png")
+            base_name = self.image_files[idx].split('.')[0]
+            mask_name = os.path.join(self.mask_folder, f"{base_name}1.png")
             mask = Image.open(mask_name).convert('L')
-            #mask = tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0)
-            mask = tv_tensors.Mask(mask)
+            mask = tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0)
 
             if self.transform:
                 image = self.transform(image)
