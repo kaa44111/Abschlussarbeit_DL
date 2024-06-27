@@ -106,20 +106,17 @@ def rename_masks(mask_folder,image_folder):
     '''
     Gives Masks the same prefix as the Image name
     '''
-    mask_files = sorted(os.listdir(mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
     image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+    mask_files = sorted(os.listdir(mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
 
-    if len(image_files) != len(mask_files):
-        print("Number of images and masks do not match. Please check your files.")
-        return
-    
     for i, image_file in enumerate(image_files):
         base_name = image_file.split('.')[0]
-        new_mask_name = f"{base_name}1.png"
-        old_mask_name = mask_files[i]
-        old_mask_path = os.path.join(mask_folder, old_mask_name)
-        new_mask_path = os.path.join(mask_folder, new_mask_name)
-        
-        if os.path.exists(old_mask_path):
-            os.rename(old_mask_path, new_mask_path)
-            print(f"Renamed {old_mask_name} to {new_mask_name}")
+        for j in range(6):  # Annahme: Es gibt 6 Masken pro Bild
+            old_mask_name = mask_files[i * 6 + j]
+            new_mask_name = f"{base_name}{j}.png"
+            old_mask_path = os.path.join(mask_folder, old_mask_name)
+            new_mask_path = os.path.join(mask_folder, new_mask_name)
+            
+            if os.path.exists(old_mask_path):
+                os.rename(old_mask_path, new_mask_path)
+                print(f"Renamed {old_mask_name} to {new_mask_name}")

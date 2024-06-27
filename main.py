@@ -16,9 +16,12 @@ if __name__ == '__main__':
         root_dir = 'data/geometry_shapes'
         train_dir = 'data/circle_data/train'
         val_dir = 'data/circle_data/val'
-    
-        split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42)
-        print("Data split completed.")
+        mask_folder = 'data/geometry_shapes/masks'
+        image_folder = 'data/geometry_shapes/grabs'
+
+        rename_masks(mask_folder=mask_folder,image_folder=image_folder)
+        #split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42)
+        #print("Data split completed.")
 
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
