@@ -72,6 +72,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
             epoch_samples = 0
 
             for inputs, labels in dataloaders[phase]:
+            # for inputs,_, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
@@ -105,7 +106,8 @@ def train_model(model, optimizer, scheduler, num_epochs):
 
 
 def run(UNet):
-    num_class = 1
+    num_class = 1 # 1 Feature
+    #num_class = 6 # 6 Feature
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
@@ -120,11 +122,11 @@ def run(UNet):
     torch.save(model.state_dict(), 'OneFeature_model.pth')
     print("Model saved to OneFeature_model.pth")
 
-if __name__ == '__main__':
-    try:
-        run(UNet)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+# if __name__ == '__main__':
+#     try:
+#         run(UNet)
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
 
 ############
 
