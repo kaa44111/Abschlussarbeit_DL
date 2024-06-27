@@ -19,7 +19,7 @@ if __name__ == '__main__':
         mask_folder = 'data/geometry_shapes/masks'
         image_folder = 'data/geometry_shapes/grabs'
 
-        rename_masks(mask_folder=mask_folder,image_folder=image_folder)
+        #rename_masks(mask_folder=mask_folder,image_folder=image_folder)
         #split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42)
         #print("Data split completed.")
 
