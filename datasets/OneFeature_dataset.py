@@ -7,19 +7,111 @@ if project_path not in sys.path:
     sys.path.append(project_path)
     
 import torch
-
-from torchvision.io import read_image
-from torchvision.ops.boxes import masks_to_boxes
 from torchvision import tv_tensors
 from torchvision.transforms import v2
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
-import re
-from utils.data_utils import MAPPING, custom_collate_fn, BinningTransform, PatchTransform
-import shutil
-from sklearn.model_selection import train_test_split
+from utils.data_utils import BinningTransform, PatchTransform
+
+
+class CustomDataset(Dataset):
+    def __init__(self, root_dir, transform=None):
+        self.root_dir = root_dir
+        self.transform = transform
+
+        # Pfade zu den Bildern und Masken
+        self.image_folder = os.path.join(root_dir, 'grabs')
+        self.mask_folder = os.path.join(root_dir, 'masks')
+
+        # Sortieren der Dateien numerisch basierend auf den Ziffern im Dateinamen
+        self.image_files = sorted(os.listdir(self.image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+        self.mask_files = sorted(os.listdir(self.mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+
+        print(f"Found {len(self.image_files)} images")
+        print(f"Found {len(self.mask_files)} masks")
+
+    def __len__(self):
+        return len(self.image_files)
+
+    def __getitem__(self, idx):
+        try:
+            # Laden des Bildes
+            img_name = os.path.join(self.image_folder, self.image_files[idx])
+            image = Image.open(img_name).convert('L')
+            image = tv_tensors.Image(image)
+
+            # Laden der Maske für dieses Bild
+            mask_name = os.path.join(self.mask_folder, f"{self.image_files[idx+1].split('.')[0]}1.png")
+            mask = Image.open(mask_name).convert('L')
+            #mask = tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0)
+            mask = tv_tensors.Mask(mask)
+
+            if self.transform:
+                image = self.transform(image)
+                mask = self.transform(mask)
+
+            return image, mask
+        
+        except Exception as e:
+            print(f"Error loading data at index {idx}: {e}")
+            return None, None  # Return dummy values
+        
+def get_dataloaders():
+    # use the same transformations for train/val in this example
+    transformations = v2.Compose([
+        v2.ToPureTensor(),
+        BinningTransform(2),
+        #PatchTransform(30),
+        v2.ToDtype(torch.float32, scale=True),
+    ])
+
+    train_set = CustomDataset('data/circle_data/train', transform = transformations)
+    val_set = CustomDataset('data/circle_data/val', transform = transformations)
+
+    image_datasets = {
+        'train': train_set, 'val': val_set
+    }
+
+    batch_size = 4
+
+    dataloaders = {
+        'train': DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0),
+        'val': DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=0)
+    }
+
+    return dataloaders
+
+if __name__ == '__main__':
+    try:
+        transformations = v2.Compose([
+            v2.ToPureTensor(),
+            BinningTransform(2),
+            #PatchTransform(30),
+            v2.ToDtype(torch.float32, scale=True),
+        ])
+        
+        dataset = CustomDataset(root_dir='data/circle_data/train',transform=transformations)
+        image, masks_tensor = dataset[0]
+        dataloader = get_dataloaders()
+        batch = next(iter(dataloader['train']))
+        images, masks =batch 
+        if image is not None and masks_tensor is not None:
+            print("Datasets:")
+            print(image.shape)
+            print(masks_tensor.shape)
+
+        if images is not None and masks is not None:
+            print("Dataloaders:")
+            print(images.shape)
+            print(masks.shape)
+        else:
+            print("Failed to load data")
+        
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 
 # # Load images
 # image_path = 'data/WireCheck/grabs/00Grab (2).tiff'
@@ -73,100 +165,3 @@ from sklearn.model_selection import train_test_split
 # plt.imshow(res , cmap='gray')
 
 # plt.show()
-
-
-class CustomDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
-        self.root_dir = root_dir
-        self.transform = transform
-
-        # Pfade zu den Bildern und Masken
-        self.image_folder = os.path.join(root_dir, 'grabs')
-        self.mask_folder = os.path.join(root_dir, 'masks')
-
-        # Sortieren der Dateien numerisch basierend auf den Ziffern im Dateinamen
-        self.image_files = sorted(os.listdir(self.image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
-        self.mask_files = sorted(os.listdir(self.mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
-
-        print(f"Found {len(self.image_files)} images")
-        print(f"Found {len(self.mask_files)} masks")
-
-    def __len__(self):
-        return len(self.image_files)
-
-    def __getitem__(self, idx):
-        try:
-            # Laden des Bildes
-            img_name = os.path.join(self.image_folder, self.image_files[idx])
-            image = Image.open(img_name).convert('L')
-            image = tv_tensors.Image(image)
-
-            # Laden der Maske für dieses Bild
-            mask_name = os.path.join(self.mask_folder, f"{self.image_files[idx+1].split('.')[0]}1.png")
-            mask = Image.open(mask_name).convert('L')
-            #mask = tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0)
-            mask = tv_tensors.Mask(mask)
-
-            if self.transform:
-                image = self.transform(image)
-                mask = self.transform(mask)
-
-            return image, mask
-        
-        except Exception as e:
-            print(f"Error loading data at index {idx}: {e}")
-            return None, None  # Return dummy values
-        
-def get_data_loaders():
-    # use the same transformations for train/val in this example
-    transformations = v2.Compose([
-        v2.ToPureTensor(),
-        BinningTransform(2),
-        #PatchTransform(30),
-        v2.ToDtype(torch.float32, scale=True),
-    ])
-
-    train_set = CustomDataset('data/circle_data/train', transform = transformations)
-    val_set = CustomDataset('data/circle_data/val', transform = transformations)
-
-    image_datasets = {
-        'train': train_set, 'val': val_set
-    }
-
-    batch_size = 4
-
-    dataloaders = {
-        'train': DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0),
-        'val': DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=0)
-    }
-
-    return dataloaders
-
-if __name__ == '__main__':
-    try:
-        transformations = v2.Compose([
-            v2.ToPureTensor(),
-            BinningTransform(2),
-            #PatchTransform(30),
-            v2.ToDtype(torch.float32, scale=True),
-        ])
-        
-        dataset = CustomDataset(root_dir='data/circle_data/train',transform=transformations)
-        image, masks_tensor = dataset[0]
-        dataloader = get_data_loaders()
-        batch = next(iter(dataloader['train']))
-        images, masks =batch 
-        if image is not None and masks_tensor is not None:
-            print("Datasets:")
-            print(image.shape)
-            print(masks_tensor.shape)
-
-        if images is not None and masks is not None:
-            print("Dataloaders:")
-            print(images.shape)
-            print(masks.shape)
-        else:
-            print("Failed to load data")
-        
-    except Exception as e:
-        print(f"An error occurred: {e}")
