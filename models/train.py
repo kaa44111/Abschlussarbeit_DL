@@ -7,8 +7,8 @@ from collections import defaultdict
 import time
 import copy
 from model import UNet
-from datasets.Geometry_dataset import get_dataloaders
-
+#from datasets.Geometry_dataset import get_dataloaders
+from datasets.OneFeature_dataset import get_dataloaders
       
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
@@ -71,7 +71,7 @@ def train_model(model, optimizer, scheduler, num_epochs):
             metrics = defaultdict(float)
             epoch_samples = 0
 
-            for inputs,_, labels in dataloaders[phase]:
+            for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
@@ -117,8 +117,8 @@ def run(UNet):
     model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=75)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'best_model.pth')
-    print("Model saved to best_model.pth")
+    torch.save(model.state_dict(), 'OneFeature_model.pth')
+    print("Model saved to OneFeature_model.pth")
 
 # if __name__ == '__main__':
 #     try:
