@@ -7,8 +7,8 @@ from collections import defaultdict
 import time
 import copy
 from model import UNet
-#from datasets.Geometry_dataset import get_dataloaders
-from datasets.OneFeature_dataset import get_dataloaders
+from datasets.Geometry_dataset import get_dataloaders
+#from datasets.OneFeature_dataset import get_dataloaders
       
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
@@ -72,9 +72,14 @@ def train_model(model, optimizer, scheduler, num_epochs):
             epoch_samples = 0
 
             for inputs, labels in dataloaders[phase]:
-            # for inputs,_, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
+                
+                testInputs = inputs.data.cpu().numpy()
+                testLabels = labels.data.cpu().numpy()
+
+                testInputs2 = testInputs[0][0]
+                testLabels2 = testLabels[0][0]
 
                 optimizer.zero_grad()
 
@@ -106,8 +111,8 @@ def train_model(model, optimizer, scheduler, num_epochs):
 
 
 def run(UNet):
-    num_class = 1 # 1 Feature
-    #num_class = 6 # 6 Feature
+    #num_class = 1 # 1 Features
+    num_class = 6 # 6 Features
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
@@ -116,17 +121,17 @@ def run(UNet):
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=75)
+    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=20)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'OneFeature_model.pth')
-    print("Model saved to OneFeature_model.pth")
+    torch.save(model.state_dict(), 'trained/new.pth')
+    print("Model saved to trained/new.pth")
 
-# if __name__ == '__main__':
-#     try:
-#         run(UNet)
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
+if __name__ == '__main__':
+     try:
+         run(UNet)
+     except Exception as e:
+         print(f"An error occurred: {e}")
 
 ############
 
