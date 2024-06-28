@@ -96,6 +96,10 @@ def get_dataloaders():
     # Aufteilen des Datensatzes in Trainings- und Validierungsdaten
     train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
 
+    # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
+    print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
+    print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
+
     # Erstellen der DataLoader für Training und Validierung
     train_loader = DataLoader(train_dataset, batch_size=25, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=25, shuffle=False)
@@ -126,7 +130,6 @@ if __name__ == '__main__':
         dataloader=get_dataloaders()
         # Beispiel für den direkten Zugriff auf das erste Batch
         batch = next(iter(dataloader['train']))
-
         images,masks = batch
         print(images.shape)
         print(masks.shape)
