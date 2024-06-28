@@ -11,15 +11,12 @@ from torchvision import tv_tensors
 from torchvision.transforms import v2
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
-import matplotlib.pyplot as plt
 import numpy as np
-import re
-from utils.data_utils import MAPPING, BinningTransform, PatchTransform
 from torch.utils.data import random_split
 
 
 class CustomDataset(Dataset):
-    def __init__(self, root_dir, transform=None, mapping = None, count=None):
+    def __init__(self, root_dir, transform=None, count=None):
         self.root_dir=root_dir
         self.transform = transform
         self.count = count
@@ -30,9 +27,6 @@ class CustomDataset(Dataset):
 
         self.image_files = sorted(os.listdir(self.image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
         self.mask_files = sorted(os.listdir(self.mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
-
-        # Define the label mapping
-        self.mapping = mapping
 
         # Begrenzen der Anzahl der Dateien, wenn count nicht None ist
         if self.count is not None:
@@ -57,16 +51,9 @@ class CustomDataset(Dataset):
             masks = [Image.open(os.path.join(self.mask_folder, mask_file)).convert('L') for mask_file in mask_paths]
             masks = [tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0) for mask in masks]
 
-            # # Create a combined mask where each form gets a unique class
-            # combined_mask = torch.zeros_like(masks[0], dtype=torch.long)  # Ensure combined_mask is long type
-            # for i, mask in enumerate(masks):
-            #     if self.mapping:
-            #         combined_mask[mask > 0] = self.mapping.get(f"form_{i}", i+1)  # Use external mapping if available
-            #     else:
-            #         combined_mask[mask > 0] = i+1  # Use index if no mapping is provided
-
             if self.transform:
                 image = self.transform(image)
+                #masks = [self.transform(mask) for mask in masks]
 
             masks_tensor = torch.stack(masks, dim=0)  # Erzeugt einen Tensor der Form [6, 1, H, W]
             masks_tensor = masks_tensor.squeeze(1)  # Ändert die Form zu [6, H, W]
@@ -86,7 +73,7 @@ def get_dataloaders():
             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
 
-    custom_dataset = CustomDataset('data', transform=transformations,mapping=MAPPING)
+    custom_dataset = CustomDataset('data', transform=transformations)
 
     # Definieren Sie die Größen für das Training und die Validierung
     dataset_size = len(custom_dataset)
@@ -101,7 +88,7 @@ def get_dataloaders():
     print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
 
     # Erstellen der DataLoader für Training und Validierung
-    train_loader = DataLoader(train_dataset, batch_size=25, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=25, shuffle=False)
     val_loader = DataLoader(val_dataset, batch_size=25, shuffle=False)
 
     #Creating Dataloaders:
@@ -133,19 +120,6 @@ if __name__ == '__main__':
         images,masks = batch
         print(images.shape)
         print(masks.shape)
-
-
-        #   # Optional: visualize the first sample in the batch
-        # plt.figure(figsize=(10, 5))
-        # plt.subplot(1, 2, 1)
-        # plt.title("First Image")
-        # plt.imshow(images[0].permute(1, 2, 0).cpu().numpy())  # Converting to HWC for visualization
-
-        # plt.subplot(1, 2, 2)
-        # plt.title("First Combined Mask")
-        # plt.imshow(combined_masks[0, 0].cpu().numpy(), cmap='gray')  # Displaying combined mask
-
-        # plt.show()
         
 
     except Exception as e:
