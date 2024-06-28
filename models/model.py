@@ -1,10 +1,10 @@
-import sys
-import os
+# import sys
+# import os
 
-#Den Projektpfad zu sys.path hinzufügen
-project_path = os.path.abspath(os.path.dirname(__file__))
-if project_path not in sys.path:
-    sys.path.insert(0, project_path)
+# #Den Projektpfad zu sys.path hinzufügen
+# project_path = os.path.abspath(os.path.dirname(__file__))
+# if project_path not in sys.path:
+#     sys.path.insert(0, project_path)
 
 import torch
 import torch.nn as nn
@@ -76,12 +76,12 @@ class UNet(nn.Module):
             xe51 = relu(self.e51(xp4))
             xe52 = relu(self.e52(xe51))
 
-            # Debugging-Ausgaben
-            print(f"xe11: {xe11.mean().item()}, xe12: {xe12.mean().item()}")
-            print(f"xe21: {xe21.mean().item()}, xe22: {xe22.mean().item()}")
-            print(f"xe31: {xe31.mean().item()}, xe32: {xe32.mean().item()}")
-            print(f"xe41: {xe41.mean().item()}, xe42: {xe42.mean().item()}")
-            print(f"xe51: {xe51.mean().item()}, xe52: {xe52.mean().item()}")
+            # # Debugging-Ausgaben
+            # print(f"xe11: {xe11.mean().item()}, xe12: {xe12.mean().item()}")
+            # print(f"xe21: {xe21.mean().item()}, xe22: {xe22.mean().item()}")
+            # print(f"xe31: {xe31.mean().item()}, xe32: {xe32.mean().item()}")
+            # print(f"xe41: {xe41.mean().item()}, xe42: {xe42.mean().item()}")
+            # print(f"xe51: {xe51.mean().item()}, xe52: {xe52.mean().item()}")
 
             # Decoder
             xu1 = self.upconv1(xe52)

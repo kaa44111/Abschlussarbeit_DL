@@ -44,10 +44,10 @@ def print_metrics(metrics, epoch_samples, phase):
     print("{}: {}".format(phase, ", ".join(outputs)))
 
 
-def train_model(model, optimizer, scheduler, num_epochs):
+
+def train_model(model, optimizer, scheduler, num_epochs=25):
     dataloaders = get_dataloaders()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    
     best_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 1e10
 
@@ -57,16 +57,16 @@ def train_model(model, optimizer, scheduler, num_epochs):
 
         since = time.time()
 
-
+        # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
                 scheduler.step()
                 for param_group in optimizer.param_groups:
                     print("LR", param_group['lr'])
 
-                model.train()
+                model.train()  # Set model to training mode
             else:
-                model.eval()
+                model.eval()  # Set model to evaluate mode
 
             metrics = defaultdict(float)
             epoch_samples = 0
@@ -75,27 +75,37 @@ def train_model(model, optimizer, scheduler, num_epochs):
                 inputs = inputs.to(device)
                 labels = labels.to(device)
                 
+                
                 testInputs = inputs.data.cpu().numpy()
                 testLabels = labels.data.cpu().numpy()
 
-                testInputs2 = testInputs[0][0]
-                testLabels2 = testLabels[0][0]
+                
 
+                testInputs2 = testInputs[0][1]
+                testLabels2 = testLabels[0][0]
+                test = testInputs2.max()
+                test1 = testLabels2.max()
+                # zero the parameter gradients
                 optimizer.zero_grad()
 
+                # forward
+                # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
                     loss = calc_loss(outputs, labels, metrics)
 
+                    # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
 
+                # statistics
                 epoch_samples += inputs.size(0)
 
             print_metrics(metrics, epoch_samples, phase)
             epoch_loss = metrics['loss'] / epoch_samples
 
+            # deep copy the model
             if phase == 'val' and epoch_loss < best_loss:
                 print("saving best model")
                 best_loss = epoch_loss
@@ -106,26 +116,25 @@ def train_model(model, optimizer, scheduler, num_epochs):
 
     print('Best val loss: {:4f}'.format(best_loss))
 
+    # load best model weights
     model.load_state_dict(best_model_wts)
     return model
 
-
 def run(UNet):
-    #num_class = 1 # 1 Features
-    num_class = 6 # 6 Features
+    num_class = 6
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    
+
     model = UNet(num_class).to(device)
 
     optimizer_ft = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=20)
+    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=30)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'trained/withoutNormailze.pth')
-    print("Model saved to trained/withoutNormailze.pth")
+    torch.save(model.state_dict(), 'trained/normalized_data.pth')
+    print("Model saved to trained/normalized_data.pth")
 
 if __name__ == '__main__':
      try:

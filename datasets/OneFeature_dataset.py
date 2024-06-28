@@ -17,17 +17,22 @@ from utils.data_utils import BinningTransform, PatchTransform
 
 
 class CustomDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
-        self.root_dir = root_dir
+    def __init__(self, root_dir, transform=None, count=None):
+        self.root_dir=root_dir
         self.transform = transform
+        self.count = count
 
         # Pfade zu den Bildern und Masken
         self.image_folder = os.path.join(root_dir, 'grabs')
         self.mask_folder = os.path.join(root_dir, 'masks')
 
-        # Sortieren der Dateien numerisch basierend auf den Ziffern im Dateinamen
         self.image_files = sorted(os.listdir(self.image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
         self.mask_files = sorted(os.listdir(self.mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+
+        # Begrenzen der Anzahl der Dateien, wenn count nicht None ist
+        if self.count is not None:
+            self.image_files = self.image_files[:self.count]
+            self.mask_files = self.mask_files[:self.count] 
 
         print(f"Found {len(self.image_files)} images")
         print(f"Found {len(self.mask_files)} masks")
@@ -39,18 +44,18 @@ class CustomDataset(Dataset):
         try:
             # Laden des Bildes
             img_name = os.path.join(self.image_folder, self.image_files[idx])
-            image = Image.open(img_name).convert('L')
+            image = Image.open(img_name)
             image = tv_tensors.Image(image)
 
             # Laden der Maske für dieses Bild
             base_name = self.image_files[idx].split('.')[0]
             mask_name = os.path.join(self.mask_folder, f"{base_name}1.png")
-            mask = Image.open(mask_name).convert('L')
+            mask = Image.open(mask_name)
             mask = tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0)
 
             if self.transform:
                 image = self.transform(image)
-                mask = self.transform(mask)
+                #mask = self.transform(mask)
 
             return image, mask
         
@@ -62,9 +67,8 @@ def get_dataloaders():
     # use the same transformations for train/val in this example
     transformations = v2.Compose([
         v2.ToPureTensor(),
-        #BinningTransform(2),
-        #PatchTransform(30),
         v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
     train_set = CustomDataset('data/circle_data/train', transform = transformations)
@@ -87,8 +91,6 @@ if __name__ == '__main__':
     try:
         transformations = v2.Compose([
             v2.ToPureTensor(),
-            BinningTransform(2),
-            #PatchTransform(30),
             v2.ToDtype(torch.float32, scale=True),
         ])
         

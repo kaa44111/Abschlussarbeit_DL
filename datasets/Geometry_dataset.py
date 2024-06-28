@@ -48,8 +48,15 @@ class CustomDataset(Dataset):
             
             mask_paths = self.mask_files[idx * 6 : (idx + 1) * 6]
             
-            masks = [Image.open(os.path.join(self.mask_folder, mask_file)).convert('L') for mask_file in mask_paths]
-            masks = [tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0) for mask in masks]
+            masks = []
+
+            for mask_file in mask_paths:
+                mask_path = os.path.join(self.mask_folder, mask_file)
+                mask = Image.open(mask_path)#.convert('1')
+                mask_tensor = torch.from_numpy(np.array(mask)).unsqueeze(0).float()
+                masks.append(mask_tensor)
+                # Debug-Ausgaben für jede Maske
+                #rint(f"Loaded mask from {mask_path}, max value: {mask_tensor.max().item()}")
 
             if self.transform:
                 image = self.transform(image)
@@ -114,12 +121,12 @@ if __name__ == '__main__':
         img, mas = sample
         print(mas.shape)  
 
-        dataloader=get_dataloaders()
-        # Beispiel für den direkten Zugriff auf das erste Batch
-        batch = next(iter(dataloader['train']))
-        images,masks = batch
-        print(images.shape)
-        print(masks.shape)
+        # dataloader=get_dataloaders()
+        # # Beispiel für den direkten Zugriff auf das erste Batch
+        # batch = next(iter(dataloader['train']))
+        # images,masks = batch
+        # print(images.shape)
+        # print(masks.shape)
         
 
     except Exception as e:
