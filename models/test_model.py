@@ -9,38 +9,25 @@ if project_path not in sys.path:
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from utils.data_utils import MAPPING,custom_collate_fn
+from utils.data_utils import MAPPING
 from model import UNet
 from datasets.Geometry_dataset import CustomDataset
 #from datasets.OneFeature_dataset import CustomDataset
 from utils.data_utils import BinningTransform
-from utils.heatmap_utils import visualize_predictions
+from utils.heatmap_utils import show_masks_pred
 from torchvision.transforms import v2 
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-
-def masks_to_colorimg(masks):
-    colors = np.asarray([(201, 58, 64), (242, 207, 1), (0, 152, 75), (101, 172, 228),(56, 34, 132), (160, 194, 56)])
-
-    colorimg = np.ones((masks.shape[1], masks.shape[2], 3), dtype=np.float32) * 255
-    channels, height, width = masks.shape
-
-    for y in range(height):
-        for x in range(width):
-            selected_colors = colors[masks[:,y,x] > 0.5]
-
-            if len(selected_colors) > 0:
-                colorimg[y,x,:] = np.mean(selected_colors, axis=0)
-
-    return colorimg.astype(np.uint8)
 def test(UNet):
     #num_class = 1
     num_class = 6
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('trained/new.pth', map_location=device))
+    model.load_state_dict(torch.load('trained/normalized.pth', map_location=device))
     model.eval()
 
     trans = v2.Compose([
@@ -51,8 +38,7 @@ def test(UNet):
 
     # Create another simulation dataset for test
     test_dataset = CustomDataset('data', transform=trans, count=3)
-    #test_dataset = CustomDataset('data/circle_data/val', transform=trans)
-    test_loader = DataLoader(test_dataset, batch_size=3, shuffle=False, num_workers=0)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
 
     images, masks_tensor = next(iter(test_loader))
     images = images.to(device)
@@ -60,19 +46,12 @@ def test(UNet):
 
     pred = model(images)
     pred = F.sigmoid(pred)
-    pred = pred.data.cpu().numpy()
+    pred = pred.data.cpu()#.numpy()
     print(pred.shape)
+    print(masks_tensor.shape)
 
-    pred_rgb = [masks_to_colorimg(x) for x in pred]
-    
-    i = 0
-    for prd in pred_rgb:
-        i += 1
-        im = Image.fromarray(prd)
-        im.save("data\\geometry_shapes\\validate\\" + str(i) + ".png")    
-    
-    # Visualisieren der Vorhersagen und Heatmaps
-    #visualize_predictions(pred, masks_tensor)
+    show_masks_pred(mask=masks_tensor,pred=pred)
+
 
 if __name__ == '__main__':
     try:
