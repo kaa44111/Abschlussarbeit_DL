@@ -124,8 +124,8 @@ def run(UNet):
     model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=20)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'trained/new.pth')
-    print("Model saved to trained/new.pth")
+    torch.save(model.state_dict(), 'trained/withoutNormailze.pth')
+    print("Model saved to trained/withoutNormailze.pth")
 
 if __name__ == '__main__':
      try:
