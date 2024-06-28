@@ -14,14 +14,15 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-from utils.data_utils import MAPPING, custom_collate_fn, BinningTransform, PatchTransform
+from utils.data_utils import MAPPING, BinningTransform, PatchTransform
 from torch.utils.data import random_split
 
 
 class CustomDataset(Dataset):
-    def __init__(self, root_dir, transform=None, mapping = None):
+    def __init__(self, root_dir, transform=None, mapping = None, count=None):
         self.root_dir=root_dir
         self.transform = transform
+        self.count = count
 
         # Pfade zu den Bildern und Masken
         self.image_folder = os.path.join(root_dir, 'geometry_shapes', 'grabs')
@@ -32,6 +33,11 @@ class CustomDataset(Dataset):
 
         # Define the label mapping
         self.mapping = mapping
+
+        # Begrenzen der Anzahl der Dateien, wenn count nicht None ist
+        if self.count is not None:
+            self.image_files = self.image_files[:self.count]
+            self.mask_files = self.mask_files[:self.count * 6]  # Annahme: 6 Masken pro Bild
 
         print(f"Found {len(self.image_files)} images")
         print(f"Found {len(self.mask_files)} masks")
@@ -75,9 +81,10 @@ class CustomDataset(Dataset):
 def get_dataloaders():
 
     transformations = v2.Compose([
-    v2.ToPureTensor(),
-    v2.ToDtype(torch.float32, scale=True),
-    ])
+            v2.ToPureTensor(),
+            v2.ToDtype(torch.float32, scale=True),
+            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
 
     custom_dataset = CustomDataset('data', transform=transformations,mapping=MAPPING)
 
@@ -90,8 +97,8 @@ def get_dataloaders():
     train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
 
     # Erstellen der DataLoader für Training und Validierung
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=25, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=25, shuffle=False)
 
     #Creating Dataloaders:
     dataloaders = {
@@ -102,7 +109,7 @@ def get_dataloaders():
     return dataloaders
 
 if __name__ == '__main__':
-    dataloader=get_dataloaders()
+    
 
     try:
         transformations = v2.Compose([
@@ -111,11 +118,12 @@ if __name__ == '__main__':
             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
 
-        dataset = CustomDataset('data', transform=transformations,mapping=MAPPING)
+        dataset = CustomDataset('data', transform=transformations,count=4)
         sample = dataset[0]
         img, mas = sample
-        print(mas.shape)        
+        print(mas.shape)  
 
+        dataloader=get_dataloaders()
         # Beispiel für den direkten Zugriff auf das erste Batch
         batch = next(iter(dataloader['train']))
 
