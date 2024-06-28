@@ -62,7 +62,7 @@ def get_dataloaders():
     # use the same transformations for train/val in this example
     transformations = v2.Compose([
         v2.ToPureTensor(),
-        BinningTransform(2),
+        #BinningTransform(2),
         #PatchTransform(30),
         v2.ToDtype(torch.float32, scale=True),
     ])
@@ -74,7 +74,7 @@ def get_dataloaders():
         'train': train_set, 'val': val_set
     }
 
-    batch_size = 4
+    batch_size = 25
 
     dataloaders = {
         'train': DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0),

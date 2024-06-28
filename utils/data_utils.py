@@ -14,23 +14,6 @@ MAPPING = {
     'form_5': 6
 }
 
-def custom_collate_fn(batch):
-    """
-    Only for Datasets with more that 1 Feature
-    Custom collate function for DataLoader.
-    This function assumes each item in batch is a tuple (image, masks, combined_mask).
-    """
-
-    # Filter out any None values (in case of any loading errors)
-    batch = [item for item in batch if item[0] is not None]
-
-    images, masks, combined_masks = zip(*batch)
-    batched_images = torch.stack(images)
-    batched_combined_masks = torch.stack(combined_masks)
-    batched_masks = torch.stack(masks)
-    
-    return batched_images, batched_masks, batched_combined_masks
-
 class BinningTransform(torch.nn.Module):
     def __init__(self, bin_size):
         super().__init__()
@@ -120,3 +103,4 @@ def rename_masks(mask_folder,image_folder):
             if os.path.exists(old_mask_path):
                 os.rename(old_mask_path, new_mask_path)
                 print(f"Renamed {old_mask_name} to {new_mask_name}")
+
