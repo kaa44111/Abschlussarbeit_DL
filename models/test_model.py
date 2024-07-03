@@ -10,19 +10,19 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from model import UNet
-#from datasets.Geometry_dataset import CustomDataset,CustomDataset1,numpy_to_torch
-from datasets.OneFeature_dataset import CustomDataset
-from utils.heatmap_utils import show_masks_pred1, visualize_predictions
+from datasets.Geometry_dataset import CustomDataset
+#from datasets.OneFeature_dataset import CustomDataset
+from utils.heatmap_utils import show_masks_pred1, visualize_predictions, show_masks_pred
 from torchvision.transforms import v2 
 
 
 def test(UNet):
     #num_class = 1
-    num_class = 1
+    num_class = 6
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('train_onefeature/test.pth', map_location=device))
+    model.load_state_dict(torch.load('trained/normalized_data.pth', map_location=device))
     model.eval()
 
     trans = v2.Compose([
@@ -32,8 +32,8 @@ def test(UNet):
             ])
 
     # Create another simulation dataset for test
-    #test_dataset = CustomDataset('data', transform=trans, count=3)
-    test_dataset = CustomDataset('data/circle_data/val', transform=trans, count=3)
+    test_dataset = CustomDataset('data', image_transform=trans, count=3)
+    #test_dataset = CustomDataset('data/circle_data/val', transform=trans, count=3)
     test_loader = DataLoader(test_dataset, batch_size=3, shuffle=True, num_workers=0)
 
     images, masks_tensor = next(iter(test_loader))
@@ -48,7 +48,7 @@ def test(UNet):
     print(images.shape)
     print(masks_tensor.shape)
 
-    show_masks_pred1(mask=masks_tensor,pred=pred)
+    show_masks_pred(mask=masks_tensor,pred=pred)
    # visualize_predictions(pred, masks_tensor)
 
 

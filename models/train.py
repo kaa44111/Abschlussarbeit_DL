@@ -7,10 +7,11 @@ from collections import defaultdict
 import time
 import copy
 from model import UNet
-from datasets.Geometry_dataset import get_dataloaders
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+#from datasets.OneFeature_dataset import get_dataloaders
+from datasets.Geometry_dataset import get_data_loaders
 
 
 def renormalize(tensor):
@@ -44,28 +45,32 @@ def save_images_und_masks(inputs, label):
     # image.save('test_trainloop/images/a.png')
 
     # Verarbeite das Eingabebild
-    first_image = inputs[0]  # Nimmt das erste Bild im Batch
+    first_image = inputs[0]  # Das erste Bild im Batch
     first_image_2d = first_image.permute(1, 2, 0)  # Ändert die Dimensionen von [3, 192, 192] zu [192, 192, 3]
-    a=label.max()
     
     # Bild normalisieren und speichern
     tensorNeu = renormalize(first_image_2d)
     image_array = (tensorNeu * 255).cpu().detach().numpy().astype(np.uint8)
     image = Image.fromarray(image_array)
-    image.save('a.png')
+    image.save('test_trainloop/images/a.png')
 
-    first_label =label[0]
+    # Verarbeite die Masken
+    first_label = label[0]  # Die Masken des ersten Bildes im Batch
+    num_masks = first_label.shape[0]  # Anzahl der Masken
 
-    for i in range(first_label.shape[0]):
+    for i in range(num_masks):
         mask = first_label[i]
-        am=mask.shape
-        mask_array = (tensorNeu *255).cpu().detach().numpy().astype(np.uint8)
-        mask_image = Image.fromarray(mask_array)
+        mask_array = mask.cpu().detach().numpy()
+
+        print(f"Mask {i} min: {mask_array.min()}, max: {mask_array.max()}")
+        
+        # Normalisierung der Maske, falls die Werte nicht im Bereich [0, 1] sind
+        mask_array1 = renormalize(mask_array)
+        print(f"Mask {i} min: {mask_array1.min()}, max: {mask_array1.max()}")
+        
+        mask_array = (mask_array1 * 255).astype(np.uint8)  # Konvertiere zum uint8 Format
+        mask_image = Image.fromarray(mask_array, mode='L')  # Mode 'L' für Graustufenbilder
         mask_image.save(f'test_trainloop/masks/mask_{i}.png')
-
-
-#from datasets.OneFeature_dataset import get_dataloaders
-
 
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
@@ -103,7 +108,7 @@ def print_metrics(metrics, epoch_samples, phase):
 
 
 def train_model(model, optimizer, scheduler, num_epochs=25):
-    dataloaders = get_dataloaders()
+    dataloaders,_ = get_data_loaders()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     best_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 1e10
@@ -149,7 +154,7 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
 
-                    save_images_und_masks(inputs, labels)
+                    #save_images_und_masks(inputs, labels)
 
                     outputs = model(inputs)
                     loss = calc_loss(outputs, labels, metrics)
@@ -181,7 +186,7 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
     return model
 
 def run(UNet):
-    num_class = 1
+    num_class = 6
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model = UNet(num_class).to(device)
@@ -193,8 +198,8 @@ def run(UNet):
     model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=30)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'train_onefeature/test.pth')
-    print("Model saved to train_onefeature/test.pth")
+    torch.save(model.state_dict(), 'trained/normalized_data.pth')
+    print("Model saved to trained/normalized_data.pth")
 
 if __name__ == '__main__':
      try:
