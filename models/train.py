@@ -8,8 +8,65 @@ import time
 import copy
 from model import UNet
 from datasets.Geometry_dataset import get_dataloaders
+from PIL import Image
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def renormalize(tensor):
+        minFrom= tensor.min()
+        maxFrom= tensor.max()
+        minTo = 0
+        maxTo=1
+        return minTo + (maxTo - minTo) * ((tensor - minFrom) / (maxFrom - minFrom))
+
+def save_images_und_masks(inputs, label):
+    # tensor = torch.split(inputs)
+
+    # test = torch.squeeze(tensor[0], 0) 
+    # tsh = test.shape
+    # tensor2 = torch.split(test,1)
+
+    # sh = tensor2[0].shape
+    # test2 = torch.squeeze(tensor2[0], 0) 
+    # tsh2 = test2.shape
+
+    # tensorNeu = renormalize(test2)
+
+                    
+    # minFromNeu= tensorNeu.min()
+    # maxFromNeu= tensorNeu.max()
+
+    # a=tensorNeu.cpu().detach().numpy().astype(np.uint8)
+    # image = Image.fromarray(a)
+
+    # # Bild speichern
+    # image.save('test_trainloop/images/a.png')
+
+    # Verarbeite das Eingabebild
+    first_image = inputs[0]  # Nimmt das erste Bild im Batch
+    first_image_2d = first_image.permute(1, 2, 0)  # Ändert die Dimensionen von [3, 192, 192] zu [192, 192, 3]
+    a=label.max()
+    
+    # Bild normalisieren und speichern
+    tensorNeu = renormalize(first_image_2d)
+    image_array = (tensorNeu * 255).cpu().detach().numpy().astype(np.uint8)
+    image = Image.fromarray(image_array)
+    image.save('a.png')
+
+    first_label =label[0]
+
+    for i in range(first_label.shape[0]):
+        mask = first_label[i]
+        am=mask.shape
+        mask_array = (tensorNeu *255).cpu().detach().numpy().astype(np.uint8)
+        mask_image = Image.fromarray(mask_array)
+        mask_image.save(f'test_trainloop/masks/mask_{i}.png')
+
+
 #from datasets.OneFeature_dataset import get_dataloaders
-      
+
+
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
     target = target.contiguous()
@@ -81,7 +138,7 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
 
                 
 
-                testInputs2 = testInputs[0][1]
+                testInputs2 = testInputs[0][0]
                 testLabels2 = testLabels[0][0]
                 test = testInputs2.max()
                 test1 = testLabels2.max()
@@ -91,6 +148,9 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
+
+                    save_images_und_masks(inputs, labels)
+
                     outputs = model(inputs)
                     loss = calc_loss(outputs, labels, metrics)
 
@@ -121,7 +181,7 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
     return model
 
 def run(UNet):
-    num_class = 6
+    num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model = UNet(num_class).to(device)
@@ -133,8 +193,8 @@ def run(UNet):
     model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=30)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'trained/normalized_data.pth')
-    print("Model saved to trained/normalized_data.pth")
+    torch.save(model.state_dict(), 'train_onefeature/test.pth')
+    print("Model saved to train_onefeature/test.pth")
 
 if __name__ == '__main__':
      try:

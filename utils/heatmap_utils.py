@@ -147,20 +147,32 @@ def show_masks_pred(mask, pred):
     # Anzahl der Bilder
     num_images = true_masks.shape[0]
 
-    # # Berechne globale minimale und maximale Werte
-    # min_val = min([true_masks[i].min() for i in range(num_images)] + [pred_masks[i].min() for i in range(num_images)])
-    # max_val = max([true_masks[i].max() for i in range(num_images)] + [pred_masks[i].max() for i in range(num_images)])
-
     fig, axes = plt.subplots(2, num_images, figsize=(15, 5))
 
     for i in range(num_images):
         image = true_masks[i]
-        axes[0, i].imshow(image, cmap='gray', vmin=0, vmax=0.1)
+        axes[0, i].imshow(image, cmap='gray')
         axes[0, i].axis('off')
 
     for i in range(num_images):
         image = pred_masks[i]
-        sns.heatmap(image, ax=axes[1, i], cmap='viridis', cbar=True, vmin=0, vmax=0.1)
+        sns.heatmap(image, ax=axes[1, i], cmap='viridis', cbar=True)
         axes[1, i].axis('off')
+
+    plt.show()
+
+def show_masks_pred1(mask, pred):
+    # Wählen Sie den ersten Batch aus und konvertieren Sie ihn in NumPy (auf CPU kopieren)
+    true_masks = mask[0].cpu().numpy()
+    pred_masks = pred[0].cpu().numpy()
+
+    
+    image = true_masks[0]
+    plt.imshow(image, cmap='gray')
+    plt.axis('off')
+    
+    image = pred_masks[0]
+    sns.heatmap(image, cmap='viridis', cbar=True)
+    plt.axis('off')
 
     plt.show()
