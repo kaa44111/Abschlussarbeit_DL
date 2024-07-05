@@ -2,7 +2,7 @@ import torch
 from torchvision.transforms import v2
 import os
 import shutil
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 
 # Define the label mapping
 MAPPING = {
@@ -42,47 +42,47 @@ class PatchTransform(torch.nn.Module):
         return patches
 
     
-def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
-    """
-    Split Data into test and validate folders
-    Example:
-        root_dir = 'data/geometry_shapes'
-        train_dir = 'data/circle_data/train'
-        val_dir = 'data/circle_data/val'
-    """
-    # Erstellen der Zielordner
-    for dir in [train_dir, val_dir]:
-        grabs_dir = os.path.join(dir, 'grabs')
-        masks_dir = os.path.join(dir, 'masks')
-        os.makedirs(grabs_dir, exist_ok=True)
-        os.makedirs(masks_dir, exist_ok=True)
+# def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
+#     """
+#     Split Data into test and validate folders
+#     Example:
+#         root_dir = 'data/geometry_shapes'
+#         train_dir = 'data/circle_data/train'
+#         val_dir = 'data/circle_data/val'
+#     """
+#     # Erstellen der Zielordner
+#     for dir in [train_dir, val_dir]:
+#         grabs_dir = os.path.join(dir, 'grabs')
+#         masks_dir = os.path.join(dir, 'masks')
+#         os.makedirs(grabs_dir, exist_ok=True)
+#         os.makedirs(masks_dir, exist_ok=True)
     
-    # Pfade zu den Bilder- und Maskenordnern
-    image_folder = os.path.join(root_dir, 'grabs')
-    mask_folder = os.path.join(root_dir, 'masks')
+#     # Pfade zu den Bilder- und Maskenordnern
+#     image_folder = os.path.join(root_dir, 'grabs')
+#     mask_folder = os.path.join(root_dir, 'masks')
     
-    # Listen der Bild- und Maskendateien
-    image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
-    mask_files = sorted(os.listdir(mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+#     # Listen der Bild- und Maskendateien
+#     image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+#     mask_files = sorted(os.listdir(mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
     
-    # Aufteilen der Daten in Trainings- und Validierungssätze
-    train_images, val_images = train_test_split(image_files, test_size=test_size, random_state=random_state, shuffle=False)
+#     # Aufteilen der Daten in Trainings- und Validierungssätze
+#     train_images, val_images = train_test_split(image_files, test_size=test_size, random_state=random_state, shuffle=False)
 
-    # Kopieren der Trainingsdaten
-    for image_file in train_images:
-        shutil.copy(os.path.join(image_folder, image_file), os.path.join(train_dir, 'grabs', image_file))
-        # Annahme, dass die Maske denselben Namen wie das Bild hat, jedoch mit einer Endung von 1
-        mask_file = image_file.split('.')[0] + '1.png'
-        if os.path.exists(os.path.join(mask_folder, mask_file)):
-            shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(train_dir, 'masks', mask_file))
+#     # Kopieren der Trainingsdaten
+#     for image_file in train_images:
+#         shutil.copy(os.path.join(image_folder, image_file), os.path.join(train_dir, 'grabs', image_file))
+#         # Annahme, dass die Maske denselben Namen wie das Bild hat, jedoch mit einer Endung von 1
+#         mask_file = image_file.split('.')[0] + '1.png'
+#         if os.path.exists(os.path.join(mask_folder, mask_file)):
+#             shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(train_dir, 'masks', mask_file))
 
-    # Kopieren der Validierungsdaten
-    for image_file in val_images:
-        shutil.copy(os.path.join(image_folder, image_file), os.path.join(val_dir, 'grabs', image_file))
-        # Annahme, dass die Maske denselben Namen wie das Bild hat, jedoch mit einer Endung von 1
-        mask_file = image_file.split('.')[0] + '1.png'
-        if os.path.exists(os.path.join(mask_folder, mask_file)):
-            shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(val_dir, 'masks', mask_file))
+#     # Kopieren der Validierungsdaten
+#     for image_file in val_images:
+#         shutil.copy(os.path.join(image_folder, image_file), os.path.join(val_dir, 'grabs', image_file))
+#         # Annahme, dass die Maske denselben Namen wie das Bild hat, jedoch mit einer Endung von 1
+#         mask_file = image_file.split('.')[0] + '1.png'
+#         if os.path.exists(os.path.join(mask_folder, mask_file)):
+#             shutil.copy(os.path.join(mask_folder, mask_file), os.path.join(val_dir, 'masks', mask_file))
 
 
 def rename_masks(mask_folder,image_folder):
@@ -103,4 +103,42 @@ def rename_masks(mask_folder,image_folder):
             if os.path.exists(old_mask_path):
                 os.rename(old_mask_path, new_mask_path)
                 print(f"Renamed {old_mask_name} to {new_mask_name}")
+
+def rename_images_in_directory(directory):
+    # Erstellen Sie eine Liste aller Bilddateien im Verzeichnis
+    image_files = [f for f in os.listdir(directory) if f.endswith('.png')]
+    
+    # Sortieren Sie die Bilddateien nach ihrem numerischen Wert
+    image_files.sort(key=lambda x: int(os.path.splitext(x)[0]))
+    
+    # Schritt 1: Benennen Sie jede Bilddatei in einen temporären Namen um
+    for file_name in image_files:
+        # Extrahieren Sie den numerischen Teil des Dateinamens und erhöhen Sie ihn um 1
+        new_number = int(os.path.splitext(file_name)[0]) + 1
+        temp_name = f"temp_{new_number}.png"
+        
+        # Erstellen Sie die vollständigen Pfade für das Umbenennen
+        old_path = os.path.join(directory, file_name)
+        temp_path = os.path.join(directory, temp_name)
+        
+        # Benennen Sie die Datei um
+        os.rename(old_path, temp_path)
+        print(f"Temporarily renamed {old_path} to {temp_path}")
+    
+    # Schritt 2: Benennen Sie die temporären Dateien in ihre endgültigen Namen um
+    temp_files = [f for f in os.listdir(directory) if f.startswith('temp_')]
+    
+    for temp_name in temp_files:
+        # Entfernen Sie den 'temp_'-Präfix, um den endgültigen Namen zu erhalten
+        final_name = temp_name.replace('temp_', '')
+        
+        # Erstellen Sie die vollständigen Pfade für das Umbenennen
+        temp_path = os.path.join(directory, temp_name)
+        final_path = os.path.join(directory, final_name)
+        
+        # Benennen Sie die Datei um
+        os.rename(temp_path, final_path)
+        print(f"Renamed {temp_path} to {final_path}")
+
+#rename_images_in_directory('data/geometry_shapes/train/grabs')
 

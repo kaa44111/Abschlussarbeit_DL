@@ -33,8 +33,8 @@ class CustomDataset(Dataset):
         self.count = count
 
         # Pfade zu den Bildern und Masken
-        self.image_folder = os.path.join(root_dir, 'geometry_shapes', 'grabs')
-        self.mask_folder = os.path.join(root_dir, 'geometry_shapes', 'masks')
+        self.image_folder = os.path.join(root_dir, 'geometry_shapes', 'train', 'grabs')
+        self.mask_folder = os.path.join(root_dir, 'geometry_shapes', 'train', 'masks')
 
         self.image_files = sorted(os.listdir(self.image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
         self.mask_files = sorted(os.listdir(self.mask_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
@@ -76,10 +76,10 @@ class CustomDataset(Dataset):
                 # Laden der Maske für dieses Bild
                 mask_name = os.path.join(self.mask_folder, f"{base_name}{i}.png")
                 mask = Image.open(mask_name).convert('L')
-                mask_tensor = tv_tensors.Mask(torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0)
-                # Normalisierung der Maske, falls die Werte nicht im Bereich [0, 1] sind
-                if mask_tensor.max() > 1 or mask_tensor.min() < 0:
-                    mask_tensor = (mask_tensor - mask_tensor.min()) / (mask_tensor.max() - mask_tensor.min())
+                mask_tensor = torch.from_numpy(np.array(mask)).unsqueeze(0).float()
+
+                # Debugging-Informationen zur Maske
+                # print(f"Loaded mask {i} with shape: {mask_tensor.shape} and unique values: {torch.unique(mask_tensor)}")
 
                 masks.append(mask_tensor)
 
@@ -146,14 +146,14 @@ def get_data_loaders():
             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
     
-    # mask_trans = v2.Compose([
-    #     v2.ToPureTensor(),
-    #     #ToBinary(threshold=0.5) 
-    # ])
+    mask_trans = v2.Compose([
+        v2.ToPureTensor(),
+        #ToBinary(threshold=0.5) 
+    ])
 
 
-    train_set = CustomDataset('data', image_transform=trans_image,count=250)
-    val_set = CustomDataset('data', image_transform=trans_image,count=60)
+    train_set = CustomDataset('data', image_transform=trans_image, mask_transform=mask_trans,count=250)
+    val_set = CustomDataset('data', image_transform=trans_image, mask_transform=mask_trans,count=60)
     
 
     image_datasets = {
@@ -163,8 +163,8 @@ def get_data_loaders():
     batch_size = 25
 
     dataloaders = {
-        'train': DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=0),
-        'val': DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=0)
+        'train': DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0),
+        'val': DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=0)
     }
 
     return dataloaders, image_datasets
@@ -173,8 +173,20 @@ if __name__ == '__main__':
     
 
     try:
-        dataloader, dataset=get_data_loaders()
-        # sample = dataset['train'][0]
+        # trans_image = v2.Compose([
+        #     v2.ToPureTensor(),
+        #     v2.ToDtype(torch.float32, scale=True),
+        #     v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        #     ])
+    
+        # mask_trans = v2.Compose([
+        #     v2.ToPureTensor(),
+        #     #ToBinary(threshold=0.5) 
+        # ])
+
+
+        # dataset = CustomDataset('data', image_transform=trans_image, mask_transform=mask_trans)
+        # sample = dataset[0]
         # img, mas = sample
         # print(mas.shape)
         # print(img.shape)
@@ -197,7 +209,10 @@ if __name__ == '__main__':
         #     axes[i+1].axis('off')
         #     axes[i+1].set_title(f'Mask {i+1}')
         
-        #plt.show()  
+        # plt.show()  
+
+        
+        dataloader, dataset=get_data_loaders()
 
         # Beispiel für den direkten Zugriff auf das erste Batch
         batch = next(iter(dataloader['train']))
@@ -206,13 +221,16 @@ if __name__ == '__main__':
         print(masks.shape)
         print(images[0][0].shape)
 
-        first_image = images[0]  # Das erste Bild im Batch
-        first_batch_masks = masks[0]  # Die Masken des ersten Bildes im Batch
+        first_image = images[5]  # Das erste Bild im Batch
+        first_batch_masks = masks[5]  # Die Masken des ersten Bildes im Batch
         first_mask = masks[0][0]
+
+        print(f"First image min: {images[0].min()}, max: {images[0].max()}")
+        print(f"First mask min: {masks[0][0].min()}, max: {masks[0][0].max()}")
 
         num_masks = first_batch_masks.shape[0]  # Anzahl der Masken
         fig, axes = plt.subplots(1, num_masks + 1, figsize=(15, 5))
-    
+
         # Das Bild anzeigen
         image_array = first_image.permute(1, 2, 0).cpu().detach().numpy()
         axes[0].imshow(image_array, cmap='gray')

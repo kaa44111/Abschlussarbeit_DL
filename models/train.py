@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Initialisierung des PYTHONPATH
+project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_path not in sys.path:
+    sys.path.append(project_path)
+
 import torch
 import torch.optim as optim
 from torch.optim import lr_scheduler
@@ -61,8 +69,6 @@ def save_images_und_masks(inputs, label):
     for i in range(num_masks):
         mask = first_label[i]
         mask_array = mask.cpu().detach().numpy()
-
-        print(f"Mask {i} min: {mask_array.min()}, max: {mask_array.max()}")
         
         # Normalisierung der Maske, falls die Werte nicht im Bereich [0, 1] sind
         mask_array1 = renormalize(mask_array)
@@ -154,7 +160,7 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
 
-                    #save_images_und_masks(inputs, labels)
+                    save_images_und_masks(inputs, labels)
 
                     outputs = model(inputs)
                     loss = calc_loss(outputs, labels, metrics)
