@@ -30,9 +30,13 @@ def test(UNet):
             v2.ToDtype(torch.float32, scale=True),
             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
+    
+    trans_mask = v2.Compose([
+        v2.ToPureTensor(),
+    ])
 
     # Create another simulation dataset for test
-    test_dataset = CustomDataset('data', image_transform=trans, count=3)
+    test_dataset = CustomDataset('data', image_transform=trans, mask_transform=trans_mask, count=3)
     #test_dataset = CustomDataset('data/circle_data/val', transform=trans, count=3)
     test_loader = DataLoader(test_dataset, batch_size=3, shuffle=True, num_workers=0)
 
@@ -56,5 +60,6 @@ def test(UNet):
 if __name__ == '__main__':
     try:
         test(UNet)
+        
     except Exception as e:
         print(f"An error occurred: {e}")
