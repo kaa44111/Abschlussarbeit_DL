@@ -1,10 +1,10 @@
 import sys
 import os
 
-# # Initialisierung des PYTHONPATH
-# project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# if project_path not in sys.path:
-#     sys.path.append(project_path)
+# Initialisierung des PYTHONPATH
+project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_path not in sys.path:
+    sys.path.append(project_path)
 
 import torch
 import torch.nn.functional as F

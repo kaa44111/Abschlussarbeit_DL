@@ -160,7 +160,7 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
 
-                    save_images_und_masks(inputs, labels)
+                    #save_images_und_masks(inputs, labels)
 
                     outputs = model(inputs)
                     loss = calc_loss(outputs, labels, metrics)
