@@ -13,17 +13,12 @@ from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 import numpy as np
 from torch.utils.data import random_split
-from torchvision import transforms
+from torchvision.transforms import functional as F
 import matplotlib.pyplot as plt
 
-
-def renormalize(tensor):
-        minFrom= tensor.min()
-        maxFrom= tensor.max()
-        minTo = 0
-        maxTo=1
-        return minTo + (maxTo - minTo) * ((tensor - minFrom) / (maxFrom - minFrom))
-    
+class Equalize(torch.nn.Module):
+    def forward(self, img):
+        return F.equalize(img)
 
 class CustomDataset(Dataset):
     def __init__(self, root_dir, image_transform=None, mask_transform=None, count=None):
@@ -57,18 +52,7 @@ class CustomDataset(Dataset):
             image = Image.open(img_name).convert('RGB')
             image=tv_tensors.Image(image)
             
-            # mask_paths = self.mask_files[idx * 6 : (idx + 1) * 6]
-            
-            # masks = []
-
-            # for mask_file in mask_paths:
-            #     mask_path = os.path.join(self.mask_folder, mask_file)
-            #     mask = Image.open(mask_path)#.convert('1')
-            #     mask_tensor = torch.from_numpy(np.array(mask)).unsqueeze(0).float()
-            #     masks.append(mask_tensor)
-            #     # Debug-Ausgaben für jede Maske
-            #     #print(f"Loaded mask from {mask_path}, max value: {mask_tensor.max().item()}")
-
+            #Load Masks
             masks = []
             base_name = self.image_files[idx].split('.')[0]
             a = base_name
@@ -134,21 +118,16 @@ class CustomDataset(Dataset):
 
 
 def get_data_loaders():
-    # # use the same transformations for train/val in this example
-    # trans = transforms.Compose([
-    #     transforms.ToTensor(),
-    #     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # imagenet
-    # ])
 
     trans_image = v2.Compose([
+            #Equalize(),
             v2.ToPureTensor(),
             v2.ToDtype(torch.float32, scale=True),
-            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            #v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
     
     mask_trans = v2.Compose([
         v2.ToPureTensor(),
-        #ToBinary(threshold=0.5) 
     ])
 
 
@@ -169,83 +148,66 @@ def get_data_loaders():
 
     return dataloaders, image_datasets
 
+def compute_mean_std(dataset):
+    dataloader = DataLoader(dataset, batch_size=25, shuffle=False, num_workers=0)
+    mean = torch.zeros(3)
+    std = torch.zeros(3)
+    total_images_count = 0
+
+    for images, _ in dataloader:
+        images = images.view(images.size(0), images.size(1), -1)
+        mean += images.mean([2]).sum(0)
+        std += images.std([2]).sum(0)
+        total_images_count += images.size(0)
+
+    mean /= total_images_count
+    std /= total_images_count
+
+    return mean, std
+
 if __name__ == '__main__':
     
-
     try:
-        # trans_image = v2.Compose([
-        #     v2.ToPureTensor(),
-        #     v2.ToDtype(torch.float32, scale=True),
-        #     v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        #     ])
-    
-        # mask_trans = v2.Compose([
-        #     v2.ToPureTensor(),
-        #     #ToBinary(threshold=0.5) 
-        # ])
-
-
-        # dataset = CustomDataset('data', image_transform=trans_image, mask_transform=mask_trans)
-        # sample = dataset[0]
-        # img, mas = sample
-        # print(mas.shape)
-        # print(img.shape)
-
-        # num_masks=mas.shape[0]
-                 
-        # fig, axes = plt.subplots(1, num_masks+1, figsize=(15, 15))
-        # image_array = img[0].cpu().detach().numpy()
-        # axes[0].imshow(image_array,cmap='gray')
-        # axes[0].axis('off')
-        # axes[0].set_title('Image')
-
-        # if num_masks == 1:
-        #     axes = [axes]  # Falls nur eine Maske vorhanden ist, um Fehler zu vermeiden
-
-        # for i in range(num_masks):
-        #     mask = mas[i]
-        #     mask_array = mask.cpu().detach().numpy()
-        #     axes[i+1].imshow(mask_array, cmap='gray')
-        #     axes[i+1].axis('off')
-        #     axes[i+1].set_title(f'Mask {i+1}')
-        
-        # plt.show()  
-
-        
         dataloader, dataset=get_data_loaders()
 
-        # Beispiel für den direkten Zugriff auf das erste Batch
-        batch = next(iter(dataloader['train']))
-        images,masks = batch
-        print(images.shape)
-        print(masks.shape)
-        print(images[0][0].shape)
+        batch1=dataset['train']
+        mean, std = compute_mean_std(batch1)
+        print(mean)
+        print(std)
 
-        first_image = images[5]  # Das erste Bild im Batch
-        first_batch_masks = masks[5]  # Die Masken des ersten Bildes im Batch
-        first_mask = masks[0][0]
+        # # Beispiel für den direkten Zugriff auf das erste Batch
+        # batch = next(iter(dataloader['train']))
+       
+        # images,masks = batch
+        # print(images.shape)
+        # print(masks.shape)
+        # print(images[0][0].shape)
 
-        print(f"First image min: {images[0].min()}, max: {images[0].max()}")
-        print(f"First mask min: {masks[0][0].min()}, max: {masks[0][0].max()}")
+        # first_image = images[5]  # Das erste Bild im Batch
+        # first_batch_masks = masks[5]  # Die Masken des ersten Bildes im Batch
+        # first_mask = masks[0][0]
 
-        num_masks = first_batch_masks.shape[0]  # Anzahl der Masken
-        fig, axes = plt.subplots(1, num_masks + 1, figsize=(15, 5))
+        # print(f"First image min: {images[0].min()}, max: {images[0].max()}")
+        # print(f"First mask min: {masks[0][0].min()}, max: {masks[0][0].max()}")
 
-        # Das Bild anzeigen
-        image_array = first_image.permute(1, 2, 0).cpu().detach().numpy()
-        axes[0].imshow(image_array, cmap='gray')
-        axes[0].axis('off')
-        axes[0].set_title('Image')
+        # num_masks = first_batch_masks.shape[0]  # Anzahl der Masken
+        # fig, axes = plt.subplots(1, num_masks + 1, figsize=(15, 5))
+
+        # # Das Bild anzeigen
+        # image_array = first_image.permute(1, 2, 0).cpu().detach().numpy()
+        # axes[0].imshow(image_array, cmap='gray')
+        # axes[0].axis('off')
+        # axes[0].set_title('Image')
         
-        # Die Masken anzeigen
-        for i in range(num_masks):
-            mask = first_batch_masks[i]
-            mask_array = mask.cpu().detach().numpy()
-            axes[i + 1].imshow(mask_array, cmap='gray')
-            axes[i + 1].axis('off')
-            axes[i + 1].set_title(f'Mask {i+1}')
+        # # Die Masken anzeigen
+        # for i in range(num_masks):
+        #     mask = first_batch_masks[i]
+        #     mask_array = mask.cpu().detach().numpy()
+        #     axes[i + 1].imshow(mask_array, cmap='gray')
+        #     axes[i + 1].axis('off')
+        #     axes[i + 1].set_title(f'Mask {i+1}')
         
-        plt.show()
+        # plt.show()
             
     except Exception as e:
         print(f"An error occurred: {e}")
