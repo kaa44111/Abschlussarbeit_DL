@@ -78,6 +78,8 @@ def save_images_und_masks(inputs, label):
         mask_image = Image.fromarray(mask_array, mode='L')  # Mode 'L' für Graustufenbilder
         mask_image.save(f'test_trainloop/masks/mask_{i}.png')
 
+
+
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
     target = target.contiguous()
@@ -201,11 +203,11 @@ def run(UNet):
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=30)
+    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=75)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'trained/normalized_data.pth')
-    print("Model saved to trained/normalized_data.pth")
+    torch.save(model.state_dict(), 'trained/better_normalized_data.pth')
+    print("Model saved to trained/better_normalized_data.pth")
 
 if __name__ == '__main__':
      try:
