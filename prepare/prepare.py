@@ -1,31 +1,14 @@
 from numpy.lib.stride_tricks import as_strided
 from PIL import Image
 import numpy as np
+import cv2
 
-
-def bin_image(input_path, output_path, bin_size):
-    # Bild laden und in ein numpy-Array konvertieren
-    img = Image.open(input_path)
-    img_array = np.array(img)
+def histogram_equalization_cv2(image):
+    img_yuv = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+    img_yuv[:, :, 0] = cv2.equalizeHist(img_yuv[:, :, 0])
+    img_equalized = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2RGB)
     
-    # Prüfen, ob das Bild mehr als eine Farbkanal hat
-    if len(img_array.shape) == 2:  # Graustufenbild
-        img_array = img_array[:, :, np.newaxis]
-
-    # Neue Größe berechnen
-    new_shape = (img_array.shape[0] // bin_size, bin_size,
-                 img_array.shape[1] // bin_size, bin_size, img_array.shape[2])
-    
-    # Binning durchführen
-    binned_img_array = img_array.reshape(new_shape).mean(axis=(1, 3))
-    
-    # Binned Bild konvertieren und speichern
-    if binned_img_array.shape[2] == 1:  # Graustufenbild
-        binned_img_array = binned_img_array[:, :, 0]
-    binned_img = Image.fromarray(binned_img_array.astype(img_array.dtype))
-    binned_img.save(output_path)
-
-
+    return img_equalized
 
 def downsample_image(input_path, output_path, scale_factor):
     # Bild laden
@@ -47,21 +30,13 @@ if __name__ == '__main__':
         # Load images
         scale_factor = 4  # Verkleinerungsfaktor (z.B. auf 1/4 der ursprünglichen Größe)
         image_path = 'data/WireCheck/grabs/00Grab (2).tiff'
-        mask_path = 'data/WireCheck/masks/00Grab (2).tif'
-        output_image_path = 'prepare/test/test.tiff'
-        print('Downsampling function:')
-        
-        downsample_image(image_path, output_image_path, scale_factor)
-        # img1 = Image.open(output_image_path)
-        # img1 = np.asarray(img1)
-        # print(img1.shape)
+        mask_path = 'data/WireCheck/masks/00Grab (3).tif'
 
-        print('Bin function:')
-        output_path = 'prepare/test/test1.tiff'
-        bin_image(image_path, output_path, 4)
-        img2 = Image.open(output_path)
-        img2 = np.asarray(img2)
-        print(img2.shape)
+
+        output_image_path = 'prepare/test/downsample_function(3).tiff'
+        print('Downsampling function:')
+        downsample_image(image_path, output_image_path, scale_factor)
+
 
     except Exception as e:
         print(f"An error occurred: {e}")
