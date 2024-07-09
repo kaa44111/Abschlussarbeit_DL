@@ -22,7 +22,7 @@ def test(UNet):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('trained/normalized_data.pth', map_location=device))
+    model.load_state_dict(torch.load('trained/better_normalized_data.pth', map_location=device))
     model.eval()
 
     trans = v2.Compose([
@@ -60,6 +60,5 @@ def test(UNet):
 if __name__ == '__main__':
     try:
         test(UNet)
-        
     except Exception as e:
         print(f"An error occurred: {e}")
