@@ -16,8 +16,12 @@ import matplotlib.pyplot as plt
 from torchvision import tv_tensors
 from torch.utils.data import Dataset, DataLoader
 from datasets.WireCheck_dataset import CustomDataset
+from tqdm import tqdm
 
 def downsample_image(input_path, output_path, scale_factor):
+    '''
+    Bilder werden kleiner skaliert
+    '''
     # Bild laden
     img = Image.open(input_path)
     
@@ -31,6 +35,9 @@ def downsample_image(input_path, output_path, scale_factor):
     downsampled_img.save(output_path)
 
 def find_masks_to_image(image_folder,mask_folder,scale_factor):
+    '''
+    Findet die passende Masken die gleich wie die Bilder heißen und führt ein Binning aus. Die verkleinerten Bilder & Masken werden in einem neuen Ordner gespeichert.
+    '''
     # Liste aller Bilddateien
     all_image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
 
@@ -58,7 +65,10 @@ def find_masks_to_image(image_folder,mask_folder,scale_factor):
         downsample_image(mask_name,f"{mask_modified}/{mask_files[idx]}",scale_factor)
 
 
-def compute_mean_std(dataset):
+def compute_mean_std_test(dataset):
+    '''
+    Berechnet mean und std der Images in einem Dataset.
+    '''
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=6, shuffle=False, num_workers=0)
 
     mean = torch.zeros(3)
@@ -82,7 +92,39 @@ def compute_mean_std(dataset):
 
     return mean, std
 
+def compute_mean_std(image_folder):
+    '''
+    Berechnet Mittelwerte und Standardabweichungen der Pixelwerte für die Bilder in einem Ordner.
+    '''
+    # Initialize sums and squared sums for each channel
+    channels_sum = torch.zeros(3)
+    channels_squared_sum = torch.zeros(3)
+    total_pixels = 0
+
+    # Transformation
+    transform = transforms.ToTensor()
+
+    # Iterate over all images in the folder
+    for image_name in tqdm(os.listdir(image_folder)):
+        image_path = os.path.join(image_folder, image_name)
+        image = Image.open(image_path).convert('RGB')
+        image = transform(image)
+        
+        # Sum up the values and their squares
+        channels_sum += image.sum(dim=[1, 2])
+        channels_squared_sum += (image ** 2).sum(dim=[1, 2])
+        total_pixels += image.size(1) * image.size(2)  # Anzahl der Pixel pro Bild
+
+    # Calculate mean and std across the entire dataset
+    mean = channels_sum / total_pixels
+    std = torch.sqrt(channels_squared_sum / total_pixels - mean ** 2)
+
+    return mean, std
+
 def show_image_with_rgb(image_path):
+    '''
+    Zeigt die RGB Werte eines Bildes an.
+    '''
     # Bild laden und in RGB umwandeln
     image = Image.open(image_path).convert('RGB')
     
@@ -100,6 +142,9 @@ def show_image_with_rgb(image_path):
     print(np_image)
 
 def show_image_and_mask(image, mask):
+    '''
+    Zeigt die Bilder und die dazu gehörigen masken an.
+    '''
     # Rücktransformieren des Bildes (um die Normalisierung rückgängig zu machen)
     image = image.numpy().transpose((1, 2, 0))
     #image = image * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])
@@ -131,12 +176,10 @@ if __name__ == '__main__':
 
         #find_masks_to_image(i_path,m_path,scale_factor)
 
-        dataset = CustomDataset(root_dir='prepare/test_binning',transform=transforms.ToTensor())
-        dataloader = DataLoader(dataset, batch_size=4, shuffle=False, num_workers=0)
-
-        mean, std = compute_mean_std(dataset)
-        print(mean)
-        print(std)
+        image_folder = 'prepare/test_binning/grabs'  # Verzeichnis mit deinen Bildern
+        mean, std = compute_mean_std(image_folder)
+        print(f"Mean: {mean}")
+        print(f"Std: {std}")
 
         # Beispielhafte Verwendung
         image_path = 'prepare/test_binning/grabs/01Grab.tiff'
