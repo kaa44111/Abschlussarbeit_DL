@@ -30,7 +30,7 @@ def downsample_image(input_path, output_path, scale_factor):
     # Verkleinertes Bild speichern
     downsampled_img.save(output_path)
 
-def find_masks_to_image(image_folder,mask_folder):
+def find_masks_to_image(image_folder,mask_folder,scale_factor):
     # Liste aller Bilddateien
     all_image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
 
@@ -53,35 +53,56 @@ def find_masks_to_image(image_folder,mask_folder):
     for idx in range(len(image_files)):
         img_name = os.path.join(image_folder,image_files[idx])
         images.append(img_name)
-        downsample_image(img_name,f"{image_modified}/{image_files[idx]}",4)
+        downsample_image(img_name,f"{image_modified}/{image_files[idx]}",scale_factor)
         mask_name = os.path.join(mask_folder, mask_files[idx])
-        downsample_image(mask_name,f"{mask_modified}/{mask_files[idx]}",4)
+        downsample_image(mask_name,f"{mask_modified}/{mask_files[idx]}",scale_factor)
 
 
 def compute_mean_std(dataset):
-    dataloader = DataLoader(dataset, batch_size=25, shuffle=False, num_workers=0)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=6, shuffle=False, num_workers=0)
+
     mean = torch.zeros(3)
     std = torch.zeros(3)
-    total_images_count = 0
+    total_pixels = 0
 
     for images, _ in dataloader:
-        # Summe über die Batch-Dimension
-        batch_mean = images.mean([0, 2, 3])
-        batch_std = images.std([0, 2, 3])
+        # Reshape to (batch_size * height * width, channels)
+        images = images.permute(0, 2, 3, 1).reshape(-1, 3)
+        
+        # Update total number of pixels
+        total_pixels += images.shape[0]
 
-        mean += batch_mean
-        std += batch_std
-        total_images_count += 1
+        # Sum up mean and std for each channel
+        mean += images.mean(dim=0)
+        std += images.std(dim=0)
 
-    mean /= total_images_count
-    std /= total_images_count
+    # Calculate the mean and std across the entire dataset
+    mean /= len(dataloader)
+    std /= len(dataloader)
 
     return mean, std
+
+def show_image_with_rgb(image_path):
+    # Bild laden und in RGB umwandeln
+    image = Image.open(image_path).convert('RGB')
+    
+    # Bild in ein NumPy-Array umwandeln
+    np_image = np.array(image)
+    
+    # Anzeigen des Bildes
+    plt.imshow(np_image)
+    plt.title("Image")
+    plt.axis('off')
+    plt.show()
+    
+    # Anzeigen der RGB-Werte
+    print("RGB values of the 1st Image:")
+    print(np_image)
 
 def show_image_and_mask(image, mask):
     # Rücktransformieren des Bildes (um die Normalisierung rückgängig zu machen)
     image = image.numpy().transpose((1, 2, 0))
-    image = image * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])
+    #image = image * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])
     image = np.clip(image, 0, 1)
 
     # Maske umwandeln
@@ -108,21 +129,27 @@ if __name__ == '__main__':
         i_path = 'data/WireCheck/grabs'
         m_path = 'data/WireCheck/masks'
 
-        #find_masks_to_image(i_path,m_path)
+        #find_masks_to_image(i_path,m_path,scale_factor)
 
-        dataset = CustomDataset(root_dir='prepare/test',transform=transforms.ToTensor())
+        dataset = CustomDataset(root_dir='prepare/test_binning',transform=transforms.ToTensor())
+        dataloader = DataLoader(dataset, batch_size=4, shuffle=False, num_workers=0)
 
         mean, std = compute_mean_std(dataset)
         print(mean)
         print(std)
+
+        # Beispielhafte Verwendung
+        image_path = 'prepare/test_binning/grabs/01Grab.tiff'
+        show_image_with_rgb(image_path)
 
         trans= transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(mean=mean,std=std),
         ])
 
-        dataset1=CustomDataset(root_dir='prepare/test',transform=trans)
-        image, mask = dataset1[5]
+        dataset1=CustomDataset(root_dir='prepare/test_binning',transform=trans)
+        image, mask = dataset1[0]
+        print(image.shape)
 
         show_image_and_mask(image,mask)
 
