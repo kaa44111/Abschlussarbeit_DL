@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from model import UNet
 from datasets.Geometry_dataset import CustomDataset
 #from datasets.OneFeature_dataset import CustomDataset
-from utils.heatmap_utils import show_masks_pred1, visualize_predictions, show_masks_pred
+from utils.heatmap_utils import show_masks_pred1, show_masks_pred, save_valuation
 from torchvision.transforms import v2 
 
 
@@ -53,7 +53,7 @@ def test(UNet):
     print(masks_tensor.shape)
 
     show_masks_pred(mask=masks_tensor,pred=pred)
-   # visualize_predictions(pred, masks_tensor)
+    save_valuation(images, masks_tensor, pred)
 
 
 
