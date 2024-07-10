@@ -67,3 +67,33 @@ def show_masks_pred1(mask, pred):
     plt.axis('off')
 
     plt.show()
+
+def save_valuation(inputs, labels, pred):
+        # Change channel-order and make 3 channels for matplot
+    input_images_rgb = [reverse_transform(x) for x in inputs.cpu()]
+    
+    i = 0
+    for imgs in input_images_rgb:
+        i += 1
+        im = Image.fromarray(imgs)
+        im.save("data\\geometry_shapes\\validate\\grabs\\" + str(i) + ".png")
+
+
+    # Map each channel (i.e. class) to each color
+    target_masks_rgb = [masks_to_colorimg(x) for x in labels.cpu().numpy()]
+    
+    i = 0
+    for imgsM in target_masks_rgb:
+        i += 1
+        im = Image.fromarray(imgsM)
+        im.save("data\\geometry_shapes\\validate\\masks\\" + str(i) + ".png")
+    
+    
+    
+    pred_rgb = [masks_to_colorimg(x) for x in pred]
+    
+    i = 0
+    for prd in pred_rgb:
+        i += 1
+        im = Image.fromarray(prd)
+        im.save("data\\geometry_shapes\\validate\\pred\\" + str(i) + ".png")
