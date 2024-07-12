@@ -194,6 +194,7 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
     return model
 
 def run(UNet):
+    
     num_class = 6
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -206,17 +207,49 @@ def run(UNet):
     model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=75)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'trained/better_normalized_data.pth')
-    print("Model saved to trained/better_normalized_data.pth")
+    torch.save(model.state_dict(), 'trained/grey_value_images.pth')
+    print("Model saved to trained/grey_value_images.pth")
 
 if __name__ == '__main__':
      try:
-         run(UNet)
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
+
+        start.record()
+        run(UNet)
+        end.record()
+
+        # Waits for everything to finish running
+        torch.cuda.synchronize()
+
+        # Get the elapsed time in milliseconds
+        elapsed_time_ms = start.elapsed_time(end)
+        # Convert milliseconds to seconds
+        elapsed_time_s = elapsed_time_ms / 1000
+        # Convert seconds to minutes
+        elapsed_time_min = elapsed_time_s / 60
+
+        print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
+        
      except Exception as e:
-         print(f"An error occurred: {e}")
+        print(f"An error occurred: {e}")
 
 ############
+# epochs = 30
+# Images as Grey value : 10.24 minutes
+# Images as RGB : 12.18 minutes
 
+###########
+# epochs = 75
+# Images as Grey value : 25.61 minutes
+# LR 1.0000000000000002e-06
+# Best val loss: 0.118130
+#_________________________
+# Images as RGB : 35.16 minutes
+# LR 1.0000000000000002e-06
+# Best val loss: 0.147360
+
+############
 # num_class = 6
 # device = gpu
 # lr=1e-4
