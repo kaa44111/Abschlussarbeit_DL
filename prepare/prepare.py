@@ -139,7 +139,8 @@ def show_image_with_rgb(image_path):
     
     # Anzeigen der RGB-Werte
     print("RGB values of the 1st Image:")
-    print(np_image)
+    print(np_image.min() , np_image.max())
+    #print(np_image)
 
 def show_image_and_mask(image, mask):
     '''
@@ -147,8 +148,6 @@ def show_image_and_mask(image, mask):
     '''
     # Rücktransformieren des Bildes (um die Normalisierung rückgängig zu machen)
     image = image.numpy().transpose((1, 2, 0))
-    #image = image * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])
-    image = np.clip(image, 0, 1)
 
     # Maske umwandeln
     mask = mask.squeeze().numpy()
@@ -176,25 +175,27 @@ if __name__ == '__main__':
 
         #find_masks_to_image(i_path,m_path,scale_factor)
 
-        image_folder = 'prepare/test_binning/grabs'  # Verzeichnis mit deinen Bildern
+        image_folder = 'prepare/test_patches/grabs'  # Verzeichnis mit deinen Bildern
         mean, std = compute_mean_std(image_folder)
         print(f"Mean: {mean}")
         print(f"Std: {std}")
 
         # Beispielhafte Verwendung
-        image_path = 'prepare/test_binning/grabs/01Grab.tiff'
+        image_path = 'prepare/test_patches/grabs/1_patch1.tiff'
         show_image_with_rgb(image_path)
 
-        trans= transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean,std=std),
+        trans= v2.Compose([
+            v2.ToPureTensor(),
+            v2.ToDtype(torch.float32, scale=True),
+            v2.Normalize(mean=mean,std=std),
         ])
 
-        dataset1=CustomDataset(root_dir='prepare/test_binning',transform=trans)
-        image, mask = dataset1[0]
-        print(image.shape)
-
-        show_image_and_mask(image,mask)
+        dataset1=CustomDataset(root_dir='prepare/test_patches',transform=trans)
+        for i in range(4):
+            image, mask = dataset1[i]
+            #print(image.shape)
+            show_image_and_mask(image,mask)
+            print(image.min(), image.max())
 
        
 
