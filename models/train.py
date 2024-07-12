@@ -154,11 +154,11 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
                 test1 = testLabels2.max()
                 
                 
-                # Debugging-Ausgaben
-                print(f"Inputs shape: {inputs.shape}, dtype: {inputs.dtype}")
-                print(f"Labels shape: {labels.shape}, dtype: {labels.dtype}")
-                print(f"Max input value: {inputs.max()}, Min input value: {inputs.min()}")
-                print(f"Max label value: {labels.max()}, Min label value: {labels.min()}")
+                # # Debugging-Ausgaben
+                # print(f"Inputs shape: {inputs.shape}, dtype: {inputs.dtype}")
+                # print(f"Labels shape: {labels.shape}, dtype: {labels.dtype}")
+                # print(f"Max input value: {inputs.max()}, Min input value: {inputs.min()}")
+                # print(f"Max label value: {labels.max()}, Min label value: {labels.min()}")
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -171,8 +171,8 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
 
                     outputs = model(inputs)
 
-                    print(f"Outputs shape: {outputs.shape}, dtype: {outputs.dtype}")
-                    print(f"Max output value: {outputs.max()}, Min output value: {outputs.min()}")
+                    # print(f"Outputs shape: {outputs.shape}, dtype: {outputs.dtype}")
+                    # print(f"Max output value: {outputs.max()}, Min output value: {outputs.min()}")
 
                     loss = calc_loss(outputs, labels, metrics)
 
@@ -213,11 +213,11 @@ def run(UNet):
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=10)
+    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=50)
 
-    # # Speichern des trainierten Modells
-    # torch.save(model.state_dict(), 'trained/grey_value_images.pth')
-    # print("Model saved to trained/grey_value_images.pth")
+    # Speichern des trainierten Modells
+    torch.save(model.state_dict(), 'test_RetinaVessel_15.pth')
+    print("Model saved to test_RetinaVessel_15.pth")
 
 if __name__ == '__main__':
      try:
