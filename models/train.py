@@ -19,8 +19,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 #from datasets.OneFeature_dataset import get_dataloaders
-from datasets.Geometry_dataset import get_data_loaders
-
+#from datasets.Geometry_dataset import get_data_loaders
+from datasets.WireCheck_dataset import get_dataloaders
 
 def renormalize(tensor):
         minFrom= tensor.min()
@@ -116,7 +116,7 @@ def print_metrics(metrics, epoch_samples, phase):
 
 
 def train_model(model, optimizer, scheduler, num_epochs=25):
-    dataloaders,_ = get_data_loaders()
+    dataloaders,_ = get_dataloaders('data_modified/RetinaVessel/train')
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     best_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 1e10
@@ -144,17 +144,22 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
             for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
-                
-                
+
                 testInputs = inputs.data.cpu().numpy()
                 testLabels = labels.data.cpu().numpy()
-
-                
 
                 testInputs2 = testInputs[0][0]
                 testLabels2 = testLabels[0][0]
                 test = testInputs2.max()
                 test1 = testLabels2.max()
+                
+                
+                # Debugging-Ausgaben
+                print(f"Inputs shape: {inputs.shape}, dtype: {inputs.dtype}")
+                print(f"Labels shape: {labels.shape}, dtype: {labels.dtype}")
+                print(f"Max input value: {inputs.max()}, Min input value: {inputs.min()}")
+                print(f"Max label value: {labels.max()}, Min label value: {labels.min()}")
+
                 # zero the parameter gradients
                 optimizer.zero_grad()
 
@@ -165,6 +170,10 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
                     #save_images_und_masks(inputs, labels)
 
                     outputs = model(inputs)
+
+                    print(f"Outputs shape: {outputs.shape}, dtype: {outputs.dtype}")
+                    print(f"Max output value: {outputs.max()}, Min output value: {outputs.min()}")
+
                     loss = calc_loss(outputs, labels, metrics)
 
                     # backward + optimize only if in training phase
@@ -195,7 +204,7 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
 
 def run(UNet):
     
-    num_class = 6
+    num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model = UNet(num_class).to(device)
@@ -204,7 +213,7 @@ def run(UNet):
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=75)
+    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=10)
 
     # # Speichern des trainierten Modells
     # torch.save(model.state_dict(), 'trained/grey_value_images.pth')
@@ -212,24 +221,34 @@ def run(UNet):
 
 if __name__ == '__main__':
      try:
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
-
-        start.record()
+        start = time.time()
         run(UNet)
-        end.record()
+        end = time.time()
 
-        # Waits for everything to finish running
-        torch.cuda.synchronize()
-
-        # Get the elapsed time in milliseconds
-        elapsed_time_ms = start.elapsed_time(end)
-        # Convert milliseconds to seconds
-        elapsed_time_s = elapsed_time_ms / 1000
-        # Convert seconds to minutes
+        # Verstrichene Zeit in Sekunden
+        elapsed_time_s = end - start
         elapsed_time_min = elapsed_time_s / 60
 
         print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
+
+        # start = torch.cuda.Event(enable_timing=True)
+        # end = torch.cuda.Event(enable_timing=True)
+
+        # start.record()
+        # run(UNet)
+        # end.record()
+
+        # # Waits for everything to finish running
+        # torch.cuda.synchronize()
+
+        # # Get the elapsed time in milliseconds
+        # elapsed_time_ms = start.elapsed_time(end)
+        # # Convert milliseconds to seconds
+        # elapsed_time_s = elapsed_time_ms / 1000
+        # # Convert seconds to minutes
+        # elapsed_time_min = elapsed_time_s / 60
+
+        # print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
         
      except Exception as e:
         print(f"An error occurred: {e}")
