@@ -84,7 +84,6 @@ def get_dataloaders(root_dir):
     #mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
 
     transformations = v2.Compose([
-        #transforms.ToTensor(), 
         v2.RandomEqualize(p=1.0),
         v2.ToPureTensor(),
         v2.ToDtype(torch.float32, scale=True),
@@ -153,8 +152,8 @@ if __name__ == '__main__':
 
         batch = next(iter(dataloader['train']))
         images,masks = batch
-        print(images[0].shape)
-        print(masks[0].shape)
+        print(images.shape)
+        print(masks.shape)
 
         print(f"First image min: {images[0].min()}, max: {images[0].max()}")
         print(f"First mask min: {masks[0].min()}, max: {masks[0].max()}") 
