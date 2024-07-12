@@ -1,32 +1,20 @@
+import sys
 import os
-from torch.utils.data import Dataset, DataLoader
+
+# Initialisierung des PYTHONPATH
+project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_path not in sys.path:
+    sys.path.append(project_path)
+    
+from torch.utils.data import Dataset, DataLoader, Subset
 import torch
 from PIL import Image
 import numpy as np
 from torchvision.transforms import v2
-from tqdm import tqdm
 from torchvision import tv_tensors
-
-def compute_mean_std(dataloader):
-    '''
-    Annahme dass die Bilder die gleiche height und width haben.
-    '''
-    # Initialize sums and squared sums for each channel
-    channels_sum = torch.zeros(3)
-    channels_squared_sum = torch.zeros(3)
-    total_pixels = 0
-
-    for batch_images, _ in tqdm(dataloader):  # (B,C,H,W)
-        # Summe der Pixelwerte pro Kanal
-        channels_sum += batch_images.sum(dim=[0, 2, 3])
-        channels_squared_sum += (batch_images ** 2).sum(dim=[0, 2, 3])
-        total_pixels += batch_images.numel() / batch_images.size(1)  # Anzahl der Pixel pro Kanal
-
-    mean = channels_sum / total_pixels
-    std = (channels_squared_sum / total_pixels - mean ** 2) ** 0.5
-
-    return mean, std
-
+from torch.utils.data import random_split
+from utils.data_utils import show_image_and_mask, compute_mean_std
+import random
 
 class CustomDataset(Dataset):
     def __init__(self, root_dir, transform=None, count=None):
@@ -47,10 +35,10 @@ class CustomDataset(Dataset):
         i=1
         for image_file in all_image_files:
             base_name = os.path.splitext(image_file)[0]
-            #mask_name = f"{base_name}.tiff" #for RetinaVessel
+            mask_name = f"{base_name}.tiff" #for RetinaVessel
             #mask_name = f"{base_name}.tif" #for Wirecheck
             #mask_name = f'{base_name}_1.bmp' #for Ölflecken
-            mask_name = f"{base_name}1.png" #for circle_data
+            #mask_name = f"{base_name}1.png" #for circle_data
             if os.path.exists(os.path.join(self.mask_folder, mask_name)):
                 self.image_files.append(image_file)
                 self.mask_files.append(mask_name)
@@ -71,12 +59,13 @@ class CustomDataset(Dataset):
             # Laden des Bildes
             img_name = os.path.join(self.image_folder, self.image_files[idx])
             image = Image.open(img_name).convert('RGB')
-            image=tv_tensors.Image(image)
+            image= tv_tensors.Image(image)
 
             # Laden der Maske für dieses Bild
             mask_name = os.path.join(self.mask_folder, self.mask_files[idx])
             mask = Image.open(mask_name).convert('L')
-            mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float()
+            #mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float()
+            mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0
 
             if self.transform:
                 image = self.transform(image)
@@ -88,69 +77,116 @@ class CustomDataset(Dataset):
             print(f"Error loading data at index {idx}: {e}")
             return None, None  # Return dummy values
         
+# def get_dataloaders(root_dir):
+
+#     mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
+
+#     transformations = v2.Compose([
+#             v2.ToPureTensor(),
+#             v2.ToDtype(torch.float32, scale=True),
+#             v2.Normalize(mean=mean, std=std),
+#             ])
+
+#     custom_dataset = CustomDataset(root_dir=root_dir, transform=transformations)
+
+#     # Definieren Sie die Größen für das Training und die Validierung
+#     dataset_size = len(custom_dataset)
+#     train_size = int(0.8 * dataset_size)
+#     val_size = dataset_size - train_size
+
+#     # Aufteilen des Datensatzes in Trainings- und Validierungsdaten
+#     train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
+
+#     # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
+#     print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
+#     print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
+
+#     # Erstellen der DataLoader für Training und Validierung
+#     train_loader = DataLoader(train_dataset, batch_size=25, shuffle=False)
+#     val_loader = DataLoader(val_dataset, batch_size=25, shuffle=False)
+
+#     #Creating Dataloaders:
+#     dataloaders = {
+#         'train': train_loader,
+#         'val': val_loader
+#     }
+
+#     return dataloaders,custom_dataset
+
+def get_dataloaders(root_dir):
+    mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
+
+    transformations = v2.Compose([
+        v2.ToPureTensor(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=mean, std=std),
+    ])
+
+    custom_dataset = CustomDataset(root_dir=root_dir, transform=transformations)
+
+    # Definieren Sie die Größen für das Training und die Validierung
+    dataset_size = len(custom_dataset)
+    train_size = int(0.8 * dataset_size)
+    val_size = dataset_size - train_size
+
+    # Generieren Sie reproduzierbare Indizes für Training und Validierung
+    indices = list(range(dataset_size))
+    # random.seed(42)  # Sicherstellen, dass die Aufteilung jedes Mal gleich ist
+    # random.shuffle(indices)
+    train_indices = indices[:train_size]
+    val_indices = indices[train_size:]
+
+    # Erstellen Sie Subsets für Training und Validierung
+    train_dataset = Subset(custom_dataset, train_indices)
+    val_dataset = Subset(custom_dataset, val_indices)
+
+    # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
+    print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
+    print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
+
+    # Erstellen der DataLoader für Training und Validierung
+    train_loader = DataLoader(train_dataset, batch_size=25, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=25, shuffle=True, num_workers=0)
+
+    # Creating Dataloaders:
+    dataloaders = {
+        'train': train_loader,
+        'val': val_loader
+    }
+
+    return dataloaders, custom_dataset
+
+        
 if __name__ == '__main__':
     
     try:
-        transform = v2.Compose([
-            #transforms.Resize((192,192)),  # Alle Bilder auf dieselbe Größe bringen
-            v2.ToPureTensor(),
-            v2.ToDtype(torch.float32, scale=True),
-        ])
+        root_dir = 'data_modified/RetinaVessel/train'
+        dataloader,custom_dataset = get_dataloaders(root_dir=root_dir)
 
-        dataset = CustomDataset(root_dir='data/circle_data/train',transform=transform)
-        image, mask =dataset[0]
+        image, mask =custom_dataset[0]
+        print('Image:')
         print(image.shape)
         print(image.min(), image.max())
+        print('Mask:')
         print(mask.shape)
         print(mask.min(), mask.max())
 
-        import matplotlib.pyplot as plt
+        # Überprüfung der Bilder im Dataset
+        # for i in range(72,76):
+        #     image,mask = custom_dataset[i]
+        #     show_image_and_mask(image,mask) 
 
-        def show_image(image):
-            image = image.numpy().transpose((1, 2, 0))
-            plt.imshow(image)
-            plt.show()
+        batch = next(iter(dataloader['train']))
+        images,masks = batch
+        print(images[0].shape)
+        print(masks[0].shape)
 
-        # Beispielhafte Überprüfung der ersten Bilder im Dataset
-        for i in range(4):
-            image, _ = dataset[i]
-            show_image(image)    
+        print(f"First image min: {images[0].min()}, max: {images[0].max()}")
+        print(f"First mask min: {masks[0].min()}, max: {masks[0].max()}") 
+
+        # Überprüfung der Bilder im Dataloader
+        for i in range(4,8):
+            show_image_and_mask(images[i],masks[i])  
 
     except Exception as e:
         print(f"An error occurred: {e}")
-
-
-
-
-
-# dataset = CustomDataset(root_dir='data/Ölflecken',transform=transform)
-# image, mask =dataset[0]
-# print(image.shape)
-# print(image.min(), image.max())
-# print(mask.shape)
-# print(mask.min(), mask.max())
-
-# dataloader = DataLoader(dataset, batch_size=4, shuffle=False, num_workers=0)
-# mean, std = compute_mean_std(dataloader)
-# print(f"Mean: {mean}")
-# print(f"Std: {std}")
-
-
-# #__________________________________________
-# transform = transforms.Compose([
-#     transforms.ToTensor(),
-#     transforms.Normalize(std=std, mean=mean)
-# ])
-# dataset1 = CustomDataset(root_dir='data/Ölflecken',transform=transform)
-
-# import matplotlib.pyplot as plt
-
-# def show_image(image):
-#     image = image.numpy().transpose((1, 2, 0))
-#     plt.imshow(image)
-#     plt.show()
-
-# # Beispielhafte Überprüfung der ersten Bilder im Dataset
-# for i in range(4):
-#     image, _ = dataset1[i]
-#     show_image(image)
