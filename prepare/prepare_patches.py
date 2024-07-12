@@ -46,10 +46,18 @@ def save_patches(patches, base_name, output_folder, prefix):
         patch_name = f"{base_name}_{prefix}{idx + 1}.tiff"
         patch.save(os.path.join(output_folder, patch_name))
 
-def process_images_and_masks(image_folder, mask_folder, output_image_folder, output_mask_folder, patch_size):
+def process_images_and_masks(root_dir, patch_size):
     '''
     Teilt die Bilder und Masken in Patches auf und speichert sie.
     '''
+    image_folder = os.path.join(root_dir, 'train', 'grabs')
+    mask_folder = os.path.join(root_dir, 'train', 'masks')
+
+    # Erstellen des neuen Verzeichnisses basierend auf root_dir
+    base_name = os.path.basename(root_dir)
+    output_image_folder = os.path.join('data_modified', base_name, 'train', 'grabs')
+    output_mask_folder = os.path.join('data_modified', base_name, 'train', 'masks')
+
     for image_name in os.listdir(image_folder):
         if not image_name.endswith('.tif'):
             continue
@@ -73,10 +81,7 @@ def process_images_and_masks(image_folder, mask_folder, output_image_folder, out
         save_patches(mask_patches, base_name, output_mask_folder, 'patch')
 
 # Beispielhafte Verwendung
-image_folder = 'data/RetinaVessel/train/grabs'
-mask_folder = 'data/RetinaVessel/train/masks'
-output_image_folder = 'prepare/test_patches/grabs'
-output_mask_folder = 'prepare/test_patches/masks'
+root_dir = 'data/RetinaVessel'
 patch_size = 256  # Größe der Patches
 
-process_images_and_masks(image_folder, mask_folder, output_image_folder, output_mask_folder, patch_size)
+#process_images_and_masks(root_dir, patch_size)
