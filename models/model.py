@@ -16,7 +16,7 @@ class UNet(nn.Module):
     def __init__(self, n_class):
         super().__init__()
 
-        self.e11 = nn.Conv2d(3, 64, kernel_size=3, padding=1) # for RGB change 1 to 3
+        self.e11 = nn.Conv2d(1, 64, kernel_size=3, padding=1) # for RGB change 1 to 3
         #nn.BatchNorm2d(64)
         self.e12 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         #nn.BatchNorm2d(64)

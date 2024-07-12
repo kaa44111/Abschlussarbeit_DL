@@ -49,7 +49,7 @@ class CustomDataset(Dataset):
         try:
             # Load the image
             img_name = os.path.join(self.image_folder, self.image_files[idx])
-            image = Image.open(img_name).convert('RGB')
+            image = Image.open(img_name).convert('L')
             image=tv_tensors.Image(image)
             
             #Load Masks
@@ -175,39 +175,39 @@ if __name__ == '__main__':
         print(mean)
         print(std)
 
-        # # Beispiel für den direkten Zugriff auf das erste Batch
-        # batch = next(iter(dataloader['train']))
+        # Beispiel für den direkten Zugriff auf das erste Batch
+        batch = next(iter(dataloader['train']))
        
-        # images,masks = batch
-        # print(images.shape)
-        # print(masks.shape)
-        # print(images[0][0].shape)
+        images,masks = batch
+        print(images.shape)
+        print(masks.shape)
+        print(images[0][0].shape)
 
-        # first_image = images[5]  # Das erste Bild im Batch
-        # first_batch_masks = masks[5]  # Die Masken des ersten Bildes im Batch
-        # first_mask = masks[0][0]
+        first_image = images[20]  # Das erste Bild im Batch
+        first_batch_masks = masks[20]  # Die Masken des ersten Bildes im Batch
+        first_mask = masks[20][0]
 
-        # print(f"First image min: {images[0].min()}, max: {images[0].max()}")
-        # print(f"First mask min: {masks[0][0].min()}, max: {masks[0][0].max()}")
+        print(f"First image min: {images[20].min()}, max: {images[20].max()}")
+        print(f"First mask min: {masks[20][0].min()}, max: {masks[20][0].max()}")
 
-        # num_masks = first_batch_masks.shape[0]  # Anzahl der Masken
-        # fig, axes = plt.subplots(1, num_masks + 1, figsize=(15, 5))
+        num_masks = first_batch_masks.shape[0]  # Anzahl der Masken
+        fig, axes = plt.subplots(1, num_masks + 1, figsize=(15, 5))
 
-        # # Das Bild anzeigen
-        # image_array = first_image.permute(1, 2, 0).cpu().detach().numpy()
-        # axes[0].imshow(image_array, cmap='gray')
-        # axes[0].axis('off')
-        # axes[0].set_title('Image')
+        # Das Bild anzeigen
+        image_array = first_image.permute(1, 2, 0).cpu().detach().numpy()
+        axes[0].imshow(image_array, cmap='gray')
+        axes[0].axis('off')
+        axes[0].set_title('Image')
         
-        # # Die Masken anzeigen
-        # for i in range(num_masks):
-        #     mask = first_batch_masks[i]
-        #     mask_array = mask.cpu().detach().numpy()
-        #     axes[i + 1].imshow(mask_array, cmap='gray')
-        #     axes[i + 1].axis('off')
-        #     axes[i + 1].set_title(f'Mask {i+1}')
+        # Die Masken anzeigen
+        for i in range(num_masks):
+            mask = first_batch_masks[i]
+            mask_array = mask.cpu().detach().numpy()
+            axes[i + 1].imshow(mask_array, cmap='gray')
+            axes[i + 1].axis('off')
+            axes[i + 1].set_title(f'Mask {i+1}')
         
-        # plt.show()
+        plt.show()
             
     except Exception as e:
         print(f"An error occurred: {e}")

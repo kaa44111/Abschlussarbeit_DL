@@ -22,13 +22,13 @@ def test(UNet):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('trained/better_normalized_data.pth', map_location=device))
+    model.load_state_dict(torch.load('trained/grey_value_images.pth', map_location=device))
     model.eval()
 
     trans = v2.Compose([
             v2.ToPureTensor(),
             v2.ToDtype(torch.float32, scale=True),
-            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            #v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
     
     trans_mask = v2.Compose([

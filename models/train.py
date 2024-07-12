@@ -206,9 +206,9 @@ def run(UNet):
 
     model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=75)
 
-    # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'trained/grey_value_images.pth')
-    print("Model saved to trained/grey_value_images.pth")
+    # # Speichern des trainierten Modells
+    # torch.save(model.state_dict(), 'trained/grey_value_images.pth')
+    # print("Model saved to trained/grey_value_images.pth")
 
 if __name__ == '__main__':
      try:
