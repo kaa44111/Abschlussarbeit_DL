@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from torchvision import transforms
 from PIL import Image
 from tqdm import tqdm
+from torch.utils.data import DataLoader
 #from sklearn.model_selection import train_test_split
 
 def show_image_and_mask(image, mask):
@@ -31,6 +32,40 @@ def show_image_and_mask(image, mask):
     plt.axis('off')
 
     plt.show()
+
+def show_normalized_images(unnormalized_image, normalized_image, mask):
+    '''
+    Zeigt das unnormierte Bild, das normierte Bild und die dazugehörige Maske an.
+    '''
+    # Rücktransformieren des unnormalisierten Bildes (um die Normalisierung rückgängig zu machen)
+    unnormalized_image = unnormalized_image.permute(1, 2, 0).numpy()
+    
+    # Rücktransformieren des normalisierten Bildes
+    normalized_image = normalized_image.permute(1, 2, 0).numpy()
+    
+    # Maske umwandeln
+    mask = mask.squeeze().numpy()
+
+    # Anzeigen des unnormalisierten Bildes, des normalisierten Bildes und der Maske
+    plt.figure(figsize=(18, 6))
+    
+    plt.subplot(1, 3, 1)
+    plt.title("Unnormalized Image")
+    plt.imshow(unnormalized_image)
+    plt.axis('off')
+
+    plt.subplot(1, 3, 2)
+    plt.title("Normalized Image")
+    plt.imshow(normalized_image)
+    plt.axis('off')
+
+    plt.subplot(1, 3, 3)
+    plt.title("Mask")
+    plt.imshow(mask, cmap='gray')
+    plt.axis('off')
+
+    plt.show()
+
 
 def compute_mean_std(image_folder):
     '''
@@ -61,6 +96,22 @@ def compute_mean_std(image_folder):
 
     return mean, std
 
+def compute_mean_std_from_dataset(dataset):
+    loader = DataLoader(dataset, batch_size=5, shuffle=False, num_workers=0)
+    mean = torch.zeros(3)
+    std = torch.zeros(3)
+    total_images = 0
+
+    for images, _ in tqdm(loader):
+        images = images[0]  # Remove batch dimension
+        mean += images.mean(dim=[1, 2])
+        std += images.std(dim=[1, 2])
+        total_images += 1
+
+    mean /= total_images
+    std /= total_images
+
+    return mean, std
     
 # def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
 #     """
