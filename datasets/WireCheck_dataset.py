@@ -14,7 +14,8 @@ from torchvision.transforms import v2
 from torchvision import tv_tensors
 from torch.utils.data import random_split
 from utils.data_utils import show_image_and_mask, compute_mean_std
-import random
+import torchvision.transforms.functional as F
+from torchvision import transforms
 
 class CustomDataset(Dataset):
     def __init__(self, root_dir, transform=None, count=None):
@@ -59,17 +60,18 @@ class CustomDataset(Dataset):
             # Laden des Bildes
             img_name = os.path.join(self.image_folder, self.image_files[idx])
             image = Image.open(img_name).convert('RGB')
-            image= tv_tensors.Image(image)
+            image = v2.functional.pil_to_tensor(image).float()/ 255.0
+            #image= tv_tensors.Image(image)
 
             # Laden der Maske für dieses Bild
             mask_name = os.path.join(self.mask_folder, self.mask_files[idx])
             mask = Image.open(mask_name).convert('L')
-            #mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float()
             mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0
 
             if self.transform:
                 image = self.transform(image)
-                #mask = self.transform(mask)
+            # else:
+            #     image = F.to_tensor(image)
 
             return image, mask
         
@@ -77,50 +79,23 @@ class CustomDataset(Dataset):
             print(f"Error loading data at index {idx}: {e}")
             return None, None  # Return dummy values
         
-# def get_dataloaders(root_dir):
-
-#     mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
-
-#     transformations = v2.Compose([
-#             v2.ToPureTensor(),
-#             v2.ToDtype(torch.float32, scale=True),
-#             v2.Normalize(mean=mean, std=std),
-#             ])
-
-#     custom_dataset = CustomDataset(root_dir=root_dir, transform=transformations)
-
-#     # Definieren Sie die Größen für das Training und die Validierung
-#     dataset_size = len(custom_dataset)
-#     train_size = int(0.8 * dataset_size)
-#     val_size = dataset_size - train_size
-
-#     # Aufteilen des Datensatzes in Trainings- und Validierungsdaten
-#     train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
-
-#     # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
-#     print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
-#     print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
-
-#     # Erstellen der DataLoader für Training und Validierung
-#     train_loader = DataLoader(train_dataset, batch_size=25, shuffle=False)
-#     val_loader = DataLoader(val_dataset, batch_size=25, shuffle=False)
-
-#     #Creating Dataloaders:
-#     dataloaders = {
-#         'train': train_loader,
-#         'val': val_loader
-#     }
-
-#     return dataloaders,custom_dataset
 
 def get_dataloaders(root_dir):
-    mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
+    #mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
 
     transformations = v2.Compose([
+        #transforms.ToTensor(), 
+        v2.RandomEqualize(p=1.0),
         v2.ToPureTensor(),
         v2.ToDtype(torch.float32, scale=True),
-        v2.Normalize(mean=mean, std=std),
+        #v2.Normalize(mean=mean, std=std)
     ])
+
+    # transformations = transforms.Compose([
+        
+    #     transforms.ToTensor(),
+    #     v2.RandomEqualize(p=1.0),
+    # ])
 
     custom_dataset = CustomDataset(root_dir=root_dir, transform=transformations)
 
@@ -145,8 +120,8 @@ def get_dataloaders(root_dir):
     print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
 
     # Erstellen der DataLoader für Training und Validierung
-    train_loader = DataLoader(train_dataset, batch_size=25, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=25, shuffle=True, num_workers=0)
+    train_loader = DataLoader(train_dataset, batch_size=15, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=15, shuffle=True, num_workers=0)
 
     # Creating Dataloaders:
     dataloaders = {
@@ -184,9 +159,47 @@ if __name__ == '__main__':
         print(f"First image min: {images[0].min()}, max: {images[0].max()}")
         print(f"First mask min: {masks[0].min()}, max: {masks[0].max()}") 
 
-        # Überprüfung der Bilder im Dataloader
-        for i in range(4,8):
-            show_image_and_mask(images[i],masks[i])  
+        # # Überprüfung der Bilder im Dataloader
+        # for i in range(4):
+        #     show_image_and_mask(images[i],masks[i])  
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+### Get a Random split in the dataset
+# def get_dataloaders(root_dir):
+
+#     mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
+
+#     transformations = v2.Compose([
+#             v2.ToPureTensor(),
+#             v2.ToDtype(torch.float32, scale=True),
+#             v2.Normalize(mean=mean, std=std),
+#             ])
+
+#     custom_dataset = CustomDataset(root_dir=root_dir, transform=transformations)
+
+#     # Definieren Sie die Größen für das Training und die Validierung
+#     dataset_size = len(custom_dataset)
+#     train_size = int(0.8 * dataset_size)
+#     val_size = dataset_size - train_size
+
+#     # Aufteilen des Datensatzes in Trainings- und Validierungsdaten
+#     train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
+
+#     # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
+#     print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
+#     print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
+
+#     # Erstellen der DataLoader für Training und Validierung
+#     train_loader = DataLoader(train_dataset, batch_size=25, shuffle=False)
+#     val_loader = DataLoader(val_dataset, batch_size=25, shuffle=False)
+
+#     #Creating Dataloaders:
+#     dataloaders = {
+#         'train': train_loader,
+#         'val': val_loader
+#     }
+
+#     return dataloaders,custom_dataset
