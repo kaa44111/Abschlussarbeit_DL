@@ -80,8 +80,32 @@ def process_images_and_masks(root_dir, patch_size):
         save_patches(image_patches, base_name, output_image_folder, 'patch')
         save_patches(mask_patches, base_name, output_mask_folder, 'patch')
 
+def process_test_images(root_dir, patch_size):
+    '''
+    Teilt die Test Bilder in Patches auf und speichert sie.
+    '''
+    image_folder = os.path.join(root_dir, 'test')
+
+    # Erstellen des neuen Verzeichnisses basierend auf root_dir
+    base_name = os.path.basename(root_dir)
+    output_image_folder = os.path.join('data_modified', base_name, 'test')
+
+    for image_name in os.listdir(image_folder):
+        if not image_name.endswith('.tif'):
+            continue
+        
+        base_name = os.path.splitext(image_name)[0]
+        image_path = os.path.join(image_folder, image_name)
+        
+        image = Image.open(image_path).convert('RGB')
+        
+        image_patches = create_patches(image, patch_size)
+        
+        save_patches(image_patches, base_name, output_image_folder, 'patch')
+
 # Beispielhafte Verwendung
 root_dir = 'data/RetinaVessel'
 patch_size = 256  # Größe der Patches
 
 #process_images_and_masks(root_dir, patch_size)
+#process_test_images(root_dir, patch_size)
