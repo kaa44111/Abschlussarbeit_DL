@@ -2,44 +2,64 @@ import torch
 from torchvision.transforms import v2
 import os
 import shutil
+import matplotlib.pyplot as plt
+from torchvision import transforms
+from PIL import Image
+from tqdm import tqdm
 #from sklearn.model_selection import train_test_split
 
-# Define the label mapping
-MAPPING = {
-    'form_0': 1,
-    'form_1': 2,
-    'form_2': 3,
-    'form_3': 4,
-    'form_4': 5,
-    'form_5': 6
-}
+def show_image_and_mask(image, mask):
+    '''
+    Zeigt die Bilder und die dazu gehörigen masken an.
+    '''
+    # Rücktransformieren des Bildes (um die Normalisierung rückgängig zu machen)
+    image = image.numpy().transpose((1, 2, 0))
 
-class BinningTransform(torch.nn.Module):
-    def __init__(self, bin_size):
-        super().__init__()
-        self.bin_size = bin_size
+    # Maske umwandeln
+    mask = mask.squeeze().numpy()
 
-    def forward(self, img):
-        if img.dtype != torch.float32:
-            img = img.float()
-        C, H, W = img.shape
-        new_H = H // self.bin_size
-        new_W = W // self.bin_size
-        img_binned = img.view(C, new_H, self.bin_size, new_W, self.bin_size).mean(dim=(2, 4))
-        return img_binned
-    
+    # Anzeigen des Bildes und der Maske
+    plt.figure(figsize=(12, 6))
+    plt.subplot(1, 2, 1)
+    plt.title("Image")
+    plt.imshow(image)
+    plt.axis('off')
 
-class PatchTransform(torch.nn.Module):
-    def __init__(self, patch_size):
-        super().__init__()
-        self.patch_size = patch_size
+    plt.subplot(1, 2, 2)
+    plt.title("Mask")
+    plt.imshow(mask, cmap='gray')
+    plt.axis('off')
 
-    def forward(self, img):
-        C, H, W = img.shape
-        patches = img.unfold(1, self.patch_size, self.patch_size).unfold(2, self.patch_size, self.patch_size)
-        patches = patches.contiguous().view(C, -1, self.patch_size, self.patch_size)
-        patches = patches.permute(1, 0, 2, 3)  # [num_patches, C, patch_size, patch_size]
-        return patches
+    plt.show()
+
+def compute_mean_std(image_folder):
+    '''
+    Berechnet Mittelwerte und Standardabweichungen der Pixelwerte für die Bilder in einem Ordner.
+    '''
+    # Initialize sums and squared sums for each channel
+    channels_sum = torch.zeros(3)
+    channels_squared_sum = torch.zeros(3)
+    total_pixels = 0
+
+    # Transformation
+    transform = transforms.ToTensor()
+
+    # Iterate over all images in the folder
+    for image_name in tqdm(os.listdir(image_folder)):
+        image_path = os.path.join(image_folder, image_name)
+        image = Image.open(image_path).convert('RGB')
+        image = transform(image)
+        
+        # Sum up the values and their squares
+        channels_sum += image.sum(dim=[1, 2])
+        channels_squared_sum += (image ** 2).sum(dim=[1, 2])
+        total_pixels += image.size(1) * image.size(2)  # Anzahl der Pixel pro Bild
+
+    # Calculate mean and std across the entire dataset
+    mean = channels_sum / total_pixels
+    std = torch.sqrt(channels_squared_sum / total_pixels - mean ** 2)
+
+    return mean, std
 
     
 # def split_data(root_dir, train_dir, val_dir, test_size=0.2, random_state=42):
