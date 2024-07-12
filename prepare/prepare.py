@@ -182,20 +182,20 @@ if __name__ == '__main__':
 
         # Beispielhafte Verwendung
         image_path = 'prepare/test_patches/grabs/1_patch1.tiff'
-        show_image_with_rgb(image_path)
+        #show_image_with_rgb(image_path)
 
         trans= v2.Compose([
             v2.ToPureTensor(),
             v2.ToDtype(torch.float32, scale=True),
-            v2.Normalize(mean=mean,std=std),
+            #v2.Normalize(mean=mean,std=std),
         ])
 
-        dataset1=CustomDataset(root_dir='prepare/test_patches',transform=trans)
+        dataset1=CustomDataset(root_dir='data/circle_data/train',transform=trans)
         for i in range(4):
             image, mask = dataset1[i]
             #print(image.shape)
             show_image_and_mask(image,mask)
-            print(image.min(), image.max())
+            print(mask.min(), mask.max())
 
        
 

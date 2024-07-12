@@ -47,9 +47,10 @@ class CustomDataset(Dataset):
         i=1
         for image_file in all_image_files:
             base_name = os.path.splitext(image_file)[0]
-            mask_name = f"{base_name}.tiff" #for RetinaVessel
+            #mask_name = f"{base_name}.tiff" #for RetinaVessel
             #mask_name = f"{base_name}.tif" #for Wirecheck
             #mask_name = f'{base_name}_1.bmp' #for Ölflecken
+            mask_name = f"{base_name}1.png" #for circle_data
             if os.path.exists(os.path.join(self.mask_folder, mask_name)):
                 self.image_files.append(image_file)
                 self.mask_files.append(mask_name)
@@ -75,7 +76,7 @@ class CustomDataset(Dataset):
             # Laden der Maske für dieses Bild
             mask_name = os.path.join(self.mask_folder, self.mask_files[idx])
             mask = Image.open(mask_name).convert('L')
-            mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0
+            mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float()
 
             if self.transform:
                 image = self.transform(image)
@@ -92,10 +93,11 @@ if __name__ == '__main__':
     try:
         transform = v2.Compose([
             #transforms.Resize((192,192)),  # Alle Bilder auf dieselbe Größe bringen
-            v2.ToPureTensor()
+            v2.ToPureTensor(),
+            v2.ToDtype(torch.float32, scale=True),
         ])
 
-        dataset = CustomDataset(root_dir='prepare/test_patches',transform=transform)
+        dataset = CustomDataset(root_dir='data/circle_data/train',transform=transform)
         image, mask =dataset[0]
         print(image.shape)
         print(image.min(), image.max())
@@ -113,7 +115,7 @@ if __name__ == '__main__':
         for i in range(4):
             image, _ = dataset[i]
             show_image(image)    
-            
+
     except Exception as e:
         print(f"An error occurred: {e}")
 
