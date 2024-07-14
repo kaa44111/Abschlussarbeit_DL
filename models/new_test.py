@@ -14,6 +14,8 @@ import torch.nn.functional as F
 import seaborn as sns
 import matplotlib.pyplot as plt
 from model import UNet
+import matplotlib
+matplotlib.use('TkAgg')  # Backend auf TkAgg umstellen
 
 
 class ImageOnlyDataset(Dataset):
@@ -63,14 +65,27 @@ def show_predictions(images, preds, idx):
         axes[i, 1].axis('off')
 
     plt.tight_layout()
+
+    # # Anpassen der Fenstergröße und -position
+    # mng = plt.get_current_fig_manager()
+    # mng.resize(*mng.window.maxsize())  # Fenster maximieren
+    # # Alternativ: mng.window.setGeometry(x, y, width, height)
+    # # Beispiel: mng.window.setGeometry(100, 100, 1280, 720)
+
+    # # Anpassen der Fenstergröße und -position
+    # mng = plt.get_current_fig_manager()
+    # mng.window.wm_geometry("+100+100")  # Fensterposition setzen
+    # mng.resize(1280, 720)  # Fenstergröße setzen
+
     plt.show()
+
 
 def test(UNet):
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('test_RetinaVessel.pth', map_location=device))
+    model.load_state_dict(torch.load('test_RetinaVessel_15.pth', map_location=device))
     model.eval()
     
     transformations = v2.Compose([
