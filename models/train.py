@@ -216,8 +216,8 @@ def run(UNet):
     model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=50)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'test_RetinaVessel_15.pth')
-    print("Model saved to test_RetinaVessel_15.pth")
+    torch.save(model.state_dict(), 'RetinaVessel_20.pth')
+    print("Model saved to RetinaVessel_20.pth")
 
 if __name__ == '__main__':
      try:
@@ -254,11 +254,16 @@ if __name__ == '__main__':
         print(f"An error occurred: {e}")
 
 ############
+# Geometry_dataset
+# num_class = 6
 # epochs = 30
 # Images as Grey value : 10.24 minutes
+#___________________________
 # Images as RGB : 12.18 minutes
 
 ###########
+# Geometry_dataset
+# num_class = 6
 # epochs = 75
 # Images as Grey value : 25.61 minutes
 # LR 1.0000000000000002e-06
