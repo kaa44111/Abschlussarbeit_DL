@@ -7,7 +7,7 @@ if project_path not in sys.path:
     sys.path.insert(0, project_path)
 
 # Import using different methods
-from models.model import UNet
+from models.UNet import UNet
 from models.test_model import test
 from utils.data_utils import split_data, rename_masks
 

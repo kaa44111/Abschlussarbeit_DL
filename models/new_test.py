@@ -13,7 +13,7 @@ from torchvision.transforms import v2
 import torch.nn.functional as F
 import seaborn as sns
 import matplotlib.pyplot as plt
-from model import UNet
+from models.UNet import UNet
 import matplotlib
 matplotlib.use('TkAgg')  # Backend auf TkAgg umstellen
 

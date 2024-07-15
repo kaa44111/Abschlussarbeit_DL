@@ -14,7 +14,7 @@ import torch.utils
 from collections import defaultdict
 import time
 import copy
-from model import UNet
+from models.UNet import UNet
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np

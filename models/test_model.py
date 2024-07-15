@@ -9,7 +9,7 @@ if project_path not in sys.path:
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from model import UNet
+from models.UNet import UNet
 #from datasets.Geometry_dataset import CustomDataset
 #from datasets.OneFeature_dataset import CustomDataset
 from datasets.WireCheck_dataset import CustomDataset
