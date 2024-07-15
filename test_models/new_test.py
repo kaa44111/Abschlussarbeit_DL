@@ -14,6 +14,7 @@ import torch.nn.functional as F
 import seaborn as sns
 import matplotlib.pyplot as plt
 from models.UNet import UNet
+from utils.data_utils import compute_mean_std
 import matplotlib
 matplotlib.use('TkAgg')  # Backend auf TkAgg umstellen
 
@@ -85,13 +86,16 @@ def test(UNet):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('unequalized_RetinaVessel_15.pth', map_location=device))
+    model.load_state_dict(torch.load('normalized_RetinaVessel.pth', map_location=device))
     model.eval()
     
+    mean, std = compute_mean_std('data_modified/RetinaVessel/train/grabs')
+
     transformations = v2.Compose([
-            #v2.RandomEqualize(p=1.0),
-            v2.ToPureTensor(),
-            v2.ToDtype(torch.float32, scale=True),
+        #v2.RandomEqualize(p=1.0),
+        v2.ToPureTensor(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=mean, std=std)
     ])
 
     test_dataset = ImageOnlyDataset('data_modified/RetinaVessel/test', transform=transformations)
