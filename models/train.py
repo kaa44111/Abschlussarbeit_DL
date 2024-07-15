@@ -213,11 +213,11 @@ def run(UNet):
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=50)
+    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=30)
 
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'RetinaVessel_20.pth')
-    print("Model saved to RetinaVessel_20.pth")
+    torch.save(model.state_dict(), 'test_RetinaVessel.pth')
+    print("Model saved to test_RetinaVessel.pth")
 
 if __name__ == '__main__':
      try:

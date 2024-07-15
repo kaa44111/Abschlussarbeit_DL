@@ -81,13 +81,13 @@ class CustomDataset(Dataset):
         
 
 def get_dataloaders(root_dir):
-    #mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
+    mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
 
     transformations = v2.Compose([
         #v2.RandomEqualize(p=1.0),
         v2.ToPureTensor(),
         v2.ToDtype(torch.float32, scale=True),
-        #v2.Normalize(mean=mean, std=std)
+        v2.Normalize(mean=mean, std=std)
     ])
 
     # transformations = transforms.Compose([

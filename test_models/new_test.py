@@ -85,11 +85,11 @@ def test(UNet):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('RetinaVessel_20.pth', map_location=device))
+    model.load_state_dict(torch.load('unequalized_RetinaVessel_15.pth', map_location=device))
     model.eval()
     
     transformations = v2.Compose([
-            v2.RandomEqualize(p=1.0),
+            #v2.RandomEqualize(p=1.0),
             v2.ToPureTensor(),
             v2.ToDtype(torch.float32, scale=True),
     ])
