@@ -159,6 +159,10 @@ def run():
     # Verstrichene Zeit in Sekunden
     elapsed_time_s = end - start
     elapsed_time_min_UNet = elapsed_time_s / 60
+    
+    # Speichern des trainierten Modells
+    torch.save(model1.state_dict(), 'UNet_RetinaVessel.pth')
+    print("Model saved to UNet_RetinaVessel.pth")
 
     start = time.time()
     optimizer2 = optim.Adam(model2.parameters(), lr=1e-4)
@@ -168,12 +172,13 @@ def run():
     elapsed_time_s = end - start
     elapsed_time_min_UNetBatchNorm = elapsed_time_s / 60
 
+    # Speichern des trainierten Modells
+    torch.save(model2.state_dict(), 'UNetBatchNorm_RetinaVessel.pth')
+    print("Model saved to UNetBatchNorm_RetinaVessel.pth")
+
     print(f"Elapsed time for UNet: {elapsed_time_min_UNet:.2f} minutes")
     print(f"Elapsed time for UNetBatchNorm: {elapsed_time_min_UNetBatchNorm:.2f} minutes")
 
-    # # Speichern des trainierten Modells
-    # torch.save(model.state_dict(), 'RetinaVessel_20.pth')
-    # print("Model saved to RetinaVessel_20.pth")
 
 if __name__ == '__main__':
      try:
