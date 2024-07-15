@@ -1,10 +1,10 @@
-# import sys
-# import os
+import sys
+import os
 
-# #Den Projektpfad zu sys.path hinzufügen
-# project_path = os.path.abspath(os.path.dirname(__file__))
-# if project_path not in sys.path:
-#     sys.path.insert(0, project_path)
+#Den Projektpfad zu sys.path hinzufügen
+project_path = os.path.abspath(os.path.dirname(__file__))
+if project_path not in sys.path:
+    sys.path.insert(0, project_path)
 
 import torch
 import torch.nn as nn
