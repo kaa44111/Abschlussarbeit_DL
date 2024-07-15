@@ -8,7 +8,7 @@ if project_path not in sys.path:
 
 # Import using different methods
 from models.UNet import UNet
-from models.test_model import test
+from test_models.test_model import test
 from utils.data_utils import split_data, rename_masks
 
 if __name__ == '__main__':
