@@ -84,7 +84,7 @@ def get_dataloaders(root_dir):
     #mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
 
     transformations = v2.Compose([
-        v2.RandomEqualize(p=1.0),
+        #v2.RandomEqualize(p=1.0),
         v2.ToPureTensor(),
         v2.ToDtype(torch.float32, scale=True),
         #v2.Normalize(mean=mean, std=std)
@@ -119,8 +119,8 @@ def get_dataloaders(root_dir):
     print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
 
     # Erstellen der DataLoader für Training und Validierung
-    train_loader = DataLoader(train_dataset, batch_size=20, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=20, shuffle=True, num_workers=0)
+    train_loader = DataLoader(train_dataset, batch_size=15, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=15, shuffle=True, num_workers=0)
 
     # Creating Dataloaders:
     dataloaders = {
