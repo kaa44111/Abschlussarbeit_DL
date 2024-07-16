@@ -51,7 +51,12 @@ def process_images_and_masks(root_dir, patch_size):
     Teilt die Bilder und Masken in Patches auf und speichert sie.
     '''
     image_folder = os.path.join(root_dir, 'train', 'grabs')
+    if not os.path.exists(image_folder):
+        image_folder = os.path.join(root_dir, 'grabs')
+
     mask_folder = os.path.join(root_dir, 'train', 'masks')
+    if not os.path.exists(mask_folder):
+        mask_folder = os.path.join(root_dir,'masks')
 
     # Erstellen des neuen Verzeichnisses basierend auf root_dir
     base_name = os.path.basename(root_dir)
