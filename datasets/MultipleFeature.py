@@ -21,11 +21,12 @@ class Equalize(torch.nn.Module):
         return F.equalize(img)
 
 class CustomDataset(Dataset):
-    def __init__(self, root_dir, image_transform=None, mask_transform=None, count=None):
+    def __init__(self, root_dir, image_transform=None, mask_transform=None, count=None, num_features=6):
         self.root_dir=root_dir
         self.image_transform = image_transform
         self.mask_transform = mask_transform
         self.count = count
+        self.num_features = num_features
 
         # Pfade zu den Bildern und Masken
         self.image_folder = os.path.join(root_dir, 'geometry_shapes', 'train', 'grabs')
@@ -37,7 +38,7 @@ class CustomDataset(Dataset):
         # Begrenzen der Anzahl der Dateien, wenn count nicht None ist
         if self.count is not None:
             self.image_files = self.image_files[:self.count]
-            self.mask_files = self.mask_files[:self.count * 6]  # Annahme: 6 Masken pro Bild
+            self.mask_files = self.mask_files[:self.count * self.num_features]  # Annahme: 6 Masken pro Bild
 
         print(f"Found {len(self.image_files)} images")
         print(f"Found {len(self.mask_files)} masks")
@@ -56,7 +57,7 @@ class CustomDataset(Dataset):
             masks = []
             base_name = self.image_files[idx].split('.')[0]
             a = base_name
-            for i in range(0,6):
+            for i in range(0,self.num_features):
                 # Laden der Maske für dieses Bild
                 mask_name = os.path.join(self.mask_folder, f"{base_name}{i}.png")
                 mask = Image.open(mask_name).convert('L')
