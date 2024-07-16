@@ -73,29 +73,30 @@ Enthält verschiedene Hilfsfunktionen und Tools, die im Projekt verwendet werden
    pip install -r requirements.txt
 
 ## Datasets
-Die Originalbilder befinden sich im Ordner data. Modifizierte Bilder werden im Ordner data_modified gespeichert. Verwende die Skripte im Ordner prepare zur Vorverarbeitung der Bilder.
+Die Originalbilder befinden sich im Ordner `data`. Modifizierte Bilder werden im Ordner `data_modified` gespeichert. Verwende die Skripte im Ordner `prepare` zur Vorverarbeitung der Bilder.
 
 ## Modelle
-Die Modelldefinitionen befinden sich im Ordner models. Drei Variationen des UNet-Modells sind verfügbar:
+Die Modelldefinitionen befinden sich im Ordner `models`. Drei Variationen des UNet-Modells sind verfügbar:
 
-Original UNet (UNet.py)
-UNet mit Batch Normalization (UNetBatchNorm.py)
-UNet ohne MaxPooling (UNetNoMaxPool.py)
+- Original UNet (`UNet.py`)
+- UNet mit Batch Normalization (`UNetBatchNorm.py`)
+- UNet ohne MaxPooling (`UNetNoMaxPool.py`)
 
 ## Vorverarbeitung
-Verwende die Skripte im Ordner prepare zur Vorverarbeitung der Bilder:
+Verwende die Skripte im Ordner `prepare` zur Vorverarbeitung der Bilder:
 
-prepare_patches.py: Teilt Bilder in kleinere Patches auf.
-prepare_binning.py: Führt Binning auf den Bildern durch.
-Zukünftig: prepare_both.py: Führt zuerst das Binning und dann das Aufteilen in Patches durch.
-Training
-Verwende das Skript train_model.py im Ordner training, um die Modelle mit den vorbereiteten Datensätzen zu trainieren. Passe die Hyperparameter nach Bedarf an. Verwende lr_scheduler.py zur Anpassung der Lernrate während des Trainings.
+- `prepare_patches.py`: Teilt Bilder in kleinere Patches auf.
+- `prepare_binning.py`: Führt Binning auf den Bildern durch.
+- Zukünftig: `prepare_both.py`: Führt zuerst das Binning und dann das Aufteilen in Patches durch.
+
+## Training
+Verwende das Skript `train_model.py` im Ordner `train`, um die Modelle mit den vorbereiteten Datensätzen zu trainieren. Passe die Hyperparameter nach Bedarf an. Verwende lr_scheduler.py zur Anpassung der Lernrate während des Trainings.
 
 ## Ergebnisse
-Die Ergebnisse des Modelltrainings werden im Ordner results gespeichert. Dies umfasst Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.
+Die Ergebnisse des Modelltrainings werden im Ordner `train/results` gespeichert. (Dies umfasst Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)
 
 ## Testen der Modelle
-Verwende das Skript test_different_models.py im Ordner test_models, um die Ergebnisse der verschiedenen Modellvariationen zu testen und zu vergleichen.
+Verwende das Skript `test_different_models.py` im Ordner `test_models`, um die Ergebnisse der verschiedenen Modellvariationen zu testen und zu vergleichen.
 
 ## Zukünftige Arbeiten
 Hinzufügen eines Skripts prepare_both.py, das zuerst Binning durchführt und dann die Bilder in Patches aufteilt.
