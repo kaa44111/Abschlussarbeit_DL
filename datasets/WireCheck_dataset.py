@@ -49,8 +49,8 @@ class CustomDataset(Dataset):
             self.image_files = self.image_files[:self.count]
             self.mask_files = self.mask_files[:self.count]
 
-        print(f"Found {len(self.image_files)} images")
-        print(f"Found {len(self.mask_files)} masks")
+        # print(f"Found {len(self.image_files)} images")
+        # print(f"Found {len(self.mask_files)} masks")
 
     def __len__(self):
         return len(self.image_files)
@@ -81,20 +81,14 @@ class CustomDataset(Dataset):
         
 
 def get_dataloaders(root_dir):
-    mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
+    #mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
 
     transformations = v2.Compose([
-        #v2.RandomEqualize(p=1.0),
+        v2.RandomEqualize(p=1.0),
         v2.ToPureTensor(),
         v2.ToDtype(torch.float32, scale=True),
-        v2.Normalize(mean=mean, std=std)
+        #v2.Normalize(mean=mean, std=std)
     ])
-
-    # transformations = transforms.Compose([
-        
-    #     transforms.ToTensor(),
-    #     v2.RandomEqualize(p=1.0),
-    # ])
 
     custom_dataset = CustomDataset(root_dir=root_dir, transform=transformations)
 
@@ -114,9 +108,9 @@ def get_dataloaders(root_dir):
     train_dataset = Subset(custom_dataset, train_indices)
     val_dataset = Subset(custom_dataset, val_indices)
 
-    # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
-    print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
-    print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
+    # # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
+    # print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
+    # print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
 
     # Erstellen der DataLoader für Training und Validierung
     train_loader = DataLoader(train_dataset, batch_size=15, shuffle=True, num_workers=0)
