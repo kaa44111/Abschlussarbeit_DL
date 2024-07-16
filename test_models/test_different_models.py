@@ -24,7 +24,6 @@ class ImageOnlyDataset(Dataset):
         self.image_dir = image_dir
         self.transform = transform
         self.image_files = sorted(os.listdir(self.image_dir), key=lambda x: int(''.join(filter(str.isdigit, x))))
-
         print(f"Found {len(self.image_files)} images")
 
     def __len__(self):
@@ -34,62 +33,40 @@ class ImageOnlyDataset(Dataset):
         try:
             img_name = os.path.join(self.image_dir, self.image_files[idx])
             image = Image.open(img_name).convert('RGB')
-            image = v2.functional.pil_to_tensor(image).float() / 255.0
+            image = v2.pil_to_tensor(image).float() / 255.0
 
             if self.transform:
                 image = self.transform(image)
 
-            return image
+            return image, self.image_files[idx]  # Return the filename as well
 
         except Exception as e:
             print(f"Error loading data at index {idx}: {e}")
             return None
-        
 
-def show_predictions(images, preds, idx):
-    """
-    Zeigt die Originalbilder und die vorhergesagten Masken für eine gegebene Index an.
-    """
-    fig, axes = plt.subplots(len(images), 2, figsize=(10, 5 * len(images)))
-
-    for i in range(len(images)):
-        # Original image
-        img = images[idx + i].cpu().numpy().transpose((1, 2, 0))
-        axes[i, 0].imshow(img)
-        axes[i, 0].set_title('Original Image')
-        axes[i, 0].axis('off')
-
-        # Predicted mask
-        pred = preds[idx + i].cpu().squeeze().numpy()
-        sns.heatmap(pred, ax=axes[i, 1], cmap='viridis')
-        axes[i, 1].set_title('Predicted Mask')
-        axes[i, 1].axis('off')
-
+def save_heatmap(pred, filename, save_dir):
+    plt.figure(figsize=(10, 10))
+    sns.heatmap(pred, cmap='viridis')
+    plt.axis('off')
     plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, f'heatmap_{filename}'), bbox_inches='tight', pad_inches=0)
+    plt.close()
 
-    # # Anpassen der Fenstergröße und -position
-    # mng = plt.get_current_fig_manager()
-    # mng.resize(*mng.window.maxsize())  # Fenster maximieren
-    # # Alternativ: mng.window.setGeometry(x, y, width, height)
-    # # Beispiel: mng.window.setGeometry(100, 100, 1280, 720)
-
-    # # Anpassen der Fenstergröße und -position
-    # mng = plt.get_current_fig_manager()
-    # mng.window.wm_geometry("+100+100")  # Fensterposition setzen
-    # mng.resize(1280, 720)  # Fenstergröße setzen
-
-    plt.show()
-
-
-def test(UNet):
+def test(UNet, UNetMaxPool, UNetBatchNorm):
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
-    model1 = UNet(num_class).to(device)  # Originalmodell
-    model2 = UNetBatchNorm(num_class).to(device) # Modell mit Batch-Normalisierung
-
-    model1.load_state_dict(torch.load('RetinaVessel_20.pth', map_location=device))
+    model1 = UNet(num_class).to(device)  # Original model
+    model2 = UNetMaxPool(num_class).to(device)  # Model without MaxPool
+    model3 = UNetBatchNorm(num_class).to(device)  # Model with Batch Normalization
+    
+    model1.load_state_dict(torch.load('UNet_RetinaVessel.pth', map_location=device))
+    model2.load_state_dict(torch.load('UNetMaxPool_RetinaVessel.pth', map_location=device))
+    model3.load_state_dict(torch.load('UNetBatchNorm_RetinaVessel.pth', map_location=device))
+    
     model1.eval()
+    model2.eval()
+    model3.eval()
     
     transformations = v2.Compose([
             v2.RandomEqualize(p=1.0),
@@ -98,23 +75,44 @@ def test(UNet):
     ])
 
     test_dataset = ImageOnlyDataset('data_modified/RetinaVessel/test', transform=transformations)
-    test_loader = DataLoader(test_dataset, batch_size=3, shuffle=True, num_workers=0)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
 
-    images = next(iter(test_loader))
-    images = images.to(device)
+    # Create directories for saving heatmaps
+    os.makedirs('evaluate/heatmaps_UNet', exist_ok=True)
+    os.makedirs('evaluate/heatmaps_UNetMaxPool', exist_ok=True)
+    os.makedirs('evaluate/heatmaps_UNetBatchNorm', exist_ok=True)
 
-    pred = model1(images)
-    pred = F.sigmoid(pred)
-    pred = pred.data.cpu()
+    with torch.no_grad():
+        for images, filenames in test_loader:
+            images = images.to(device)
 
-    print(pred.shape)
-    print(images.shape)
+            # Predictions for UNet
+            pred1 = model1(images)
+            pred1 = F.sigmoid(pred1)
+            pred1 = pred1.squeeze().cpu().numpy()
 
-    # Show predictions
-    show_predictions(images, pred, 0)
+            # Predictions for UNetMaxPool
+            pred2 = model2(images)
+            pred2 = F.sigmoid(pred2)
+            pred2 = pred2.squeeze().cpu().numpy()
+
+            # Predictions for UNetBatchNorm
+            pred3 = model3(images)
+            pred3 = F.sigmoid(pred3)
+            pred3 = pred3.squeeze().cpu().numpy()
+
+            # Save heatmaps
+            save_heatmap(pred1, filenames[0], 'heatmaps_UNet')
+            save_heatmap(pred2, filenames[0], 'heatmaps_UNetMaxPool')
+            save_heatmap(pred3, filenames[0], 'heatmaps_UNetBatchNorm')
+
+    print("Heatmaps saved in 'heatmaps_UNet', 'heatmaps_UNetMaxPool', and 'heatmaps_UNetBatchNorm' folders.")
 
 if __name__ == '__main__':
     try:
-        test(UNet)
+        from models.UNet import UNet
+        from models.UNetMaxPool import UNetMaxPool
+        from models.UNetBatchNorm import UNetBatchNorm
+        test(UNet, UNetMaxPool, UNetBatchNorm)
     except Exception as e:
         print(f"An error occurred: {e}")
