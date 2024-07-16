@@ -43,12 +43,15 @@ Verschiedene Methoden zur Vorbereitung der Bilder.
 - `prepare_binning.py`: Methoden, die die Bilder binned und im Ordner `modified/'name_des_original_Ordners'` speichern.
 - **Zukünftig:** `prepare_both.py`: Führt zuerst das Binning und dann das Aufteilen in Patches durch.
 
-### results
-Speichert die verschiedenen Ergebnisse der antrainierten Modelle.
 
 ### test_models
 Überprüft die in `results` gespeicherten Ergebnisse.
 - `test_different_models.py`: Testet gleichzeitig alle Ergebnisse aus den 3 Modellvariationen und speichert die Ergebnisse.
+
+### train
+Enthält Skripte und Methoden zum Training der Modelle.
+- `train_compare.py`: Hauptskript zum Training der Modelle. Enthält Funktionen zur Anpassung von Hyperparametern, Speicherung von Modellen und Überwachung des Trainingsfortschritts.
+- `results`: Unterordner, der die Ergebnisse der antrainierten Modelle speichert. (einschließlich Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)*
 
 ## Installation
 
