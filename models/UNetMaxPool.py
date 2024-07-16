@@ -29,7 +29,7 @@ from torch.nn.functional import relu
 
 
 
-class UNet(nn.Module):
+class UNetMaxPool(nn.Module):
     def __init__(self, n_class):
         super().__init__()
 
