@@ -15,10 +15,11 @@ import copy
 import time
 from collections import defaultdict
 import matplotlib.pyplot as plt
+
+from datasets.WireCheck_dataset import get_dataloaders
 from models.UNetBatchNorm import UNetBatchNorm
 from models.UNet import UNet
 from models.UNetMaxPool import UNetMaxPool
-from datasets.WireCheck_dataset import get_dataloaders
 
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
@@ -83,6 +84,7 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
     best_loss = 1e10
 
     history = defaultdict(list)
+    start_time = time.time()  # Startzeit des Trainings
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -131,13 +133,15 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
 
-        time_elapsed = time.time() - since
-        print('{:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+        time_elapsed1 = time.time() - since
+        time_elapsed = time.time() - start_time
+        print('{:.0f}m {:.0f}s'.format(time_elapsed1 // 60, time_elapsed1 % 60))
 
+    print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     print('Best val loss: {:4f}'.format(best_loss))
 
     model.load_state_dict(best_model_wts)
-    return model, history
+    return model, history, time_elapsed
 
 def run():
     root_dir = 'data_modified/RetinaVessel/train'
@@ -150,28 +154,38 @@ def run():
     model2 = UNetMaxPool(num_class)  # Modell ohne die MaxPool Schicht
     model3 = UNetBatchNorm(num_class)  # Modell mit BatchNorm Schichten
 
-    criterion = nn.BCEWithLogitsLoss()
-
+    print("#######################################")
+    print("Start training Original UNet Model:")    
     # Training des Originalmodells
     optimizer1 = optim.Adam(filter(lambda p: p.requires_grad, model1.parameters()), lr=1e-4)
     scheduler1 = lr_scheduler.StepLR(optimizer1, step_size=30, gamma=0.1)
-    model1, history1 = train_model(model1, dataloaders, optimizer1, scheduler1, num_epochs=30)
+    model1, history1, time1 = train_model(model1, dataloaders, optimizer1, scheduler1, num_epochs=30)
 
+    print("#######################################")
+    print("Start training UNet Model without MaxPool:")
     # Training des Modells ohne MaxPool
     optimizer2 = optim.Adam(filter(lambda p: p.requires_grad, model2.parameters()), lr=1e-4)
     scheduler2 = lr_scheduler.StepLR(optimizer2, step_size=30, gamma=0.1)
-    model2, history2 = train_model(model2, dataloaders, optimizer2, scheduler2, num_epochs=30)
+    model2, history2, time2 = train_model(model2, dataloaders, optimizer2, scheduler2, num_epochs=30)
 
+    print("#######################################")
+    print("Start training UNet Model with BatchNorm:")
     # Training des Modells mit BatchNorm
     optimizer3 = optim.Adam(filter(lambda p: p.requires_grad, model3.parameters()), lr=1e-4)
     scheduler3 = lr_scheduler.StepLR(optimizer3, step_size=30, gamma=0.1)
-    model3, history3 = train_model(model3, dataloaders, optimizer3, scheduler3, num_epochs=30)
+    model3, history3, time3 = train_model(model3, dataloaders, optimizer3, scheduler3, num_epochs=30)
 
     # Vergleich der Metriken
     plot_metrics(history1, history2, history3, 'val_loss')
     plot_metrics(history1, history2, history3, 'val_dice')
 
+    # Vergleich der Trainingszeiten
+    print(f"UNet training time: {time1:.2f} seconds")
+    print(f"UNetMaxPool training time: {time2:.2f} seconds")
+    print(f"UNetBatchNorm training time: {time3:.2f} seconds")
+
     # Inferenzzeit messen
+    '''Zeit, die ein Modell benötigt, um eine Vorhersage für ein einzelnes Eingabebild zu machen'''
     sample_input = next(iter(dataloaders['val']))[0][:1].to(device)
     inference_time1 = measure_inference_time(model1, sample_input)
     inference_time2 = measure_inference_time(model2, sample_input)
