@@ -22,7 +22,6 @@ from datasets.WireCheck_dataset import get_dataloaders
 from models.UNetBatchNorm import UNetBatchNorm
 from models.UNet import UNet
 
-
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
     target = target.contiguous()
@@ -56,9 +55,7 @@ def print_metrics(metrics, epoch_samples, phase):
 
     print("{}: {}".format(phase, ", ".join(outputs)))
 
-
-
-def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=25):
+def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -78,6 +75,7 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
                 for param_group in optimizer.param_groups:
                     print("LR", param_group['lr'])
 
+                model.train()  # Set model to training mode
             else:
                 model.eval()  # Set model to evaluate mode
 
@@ -107,8 +105,7 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
                     # print(f"Outputs shape: {outputs.shape}, dtype: {outputs.dtype}")
                     # print(f"Max output value: {outputs.max()}, Min output value: {outputs.min()}")
 
-                    #loss = calc_loss(outputs, labels, metrics)
-                    loss = criterion(outputs, labels)
+                    loss = calc_loss(outputs, labels, metrics)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -116,13 +113,10 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
                         optimizer.step()
 
                 # statistics
-                metrics['loss'] += loss.item() * inputs.size(0)
                 epoch_samples += inputs.size(0)
 
-            #print_metrics(metrics, epoch_samples, phase)
+            print_metrics(metrics, epoch_samples, phase)
             epoch_loss = metrics['loss'] / epoch_samples
-
-            print('{} Loss: {:.4f}'.format(phase, epoch_loss))
 
             # deep copy the model
             if phase == 'val' and epoch_loss < best_loss:
@@ -152,22 +146,25 @@ def run():
     criterion = nn.BCEWithLogitsLoss()
 
     start = time.time()
-    optimizer1 = optim.Adam(model1.parameters(), lr=1e-4)
+    optimizer1 = optim.Adam(filter(lambda p: p.requires_grad, model1.parameters()), lr=1e-4)
     scheduler1 = lr_scheduler.StepLR(optimizer1, step_size=30, gamma=0.1)
-    model1 = train_model(model1, dataloaders,criterion, optimizer1, scheduler1, num_epochs=25)
+    model1 = train_model(model1, dataloaders, optimizer1, scheduler1, num_epochs=30)
     end = time.time()
-    # Verstrichene Zeit in Sekunden
-    elapsed_time_s = end - start
-    elapsed_time_min_UNet = elapsed_time_s / 60
     
     # Speichern des trainierten Modells
     torch.save(model1.state_dict(), 'UNet_RetinaVessel.pth')
     print("Model saved to UNet_RetinaVessel.pth")
 
+    
+    # Verstrichene Zeit in Sekunden
+    elapsed_time_s = end - start
+    elapsed_time_min_UNet = elapsed_time_s / 60
+    
+
     start = time.time()
-    optimizer2 = optim.Adam(model2.parameters(), lr=1e-4)
+    optimizer2 = optim.Adam(filter(lambda p: p.requires_grad, model2.parameters()), lr=1e-4)
     scheduler2 = lr_scheduler.StepLR(optimizer2, step_size=30, gamma=0.1)
-    model2 = train_model(model2, dataloaders, criterion, optimizer2, scheduler2, num_epochs=25)
+    model2 = train_model(model2, dataloaders, optimizer2, scheduler2, num_epochs=30)
     end = time.time()
     elapsed_time_s = end - start
     elapsed_time_min_UNetBatchNorm = elapsed_time_s / 60
@@ -182,34 +179,20 @@ def run():
 
 if __name__ == '__main__':
      try:
-        #start = time.time()
         run()
-        #end = time.time()
-
-        # # Verstrichene Zeit in Sekunden
-        # elapsed_time_s = end - start
-        # elapsed_time_min = elapsed_time_s / 60
-
-        # print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
-
-        # start = torch.cuda.Event(enable_timing=True)
-        # end = torch.cuda.Event(enable_timing=True)
-
-        # start.record()
-        # run(UNet)
-        # end.record()
-
-        # # Waits for everything to finish running
-        # torch.cuda.synchronize()
-
-        # # Get the elapsed time in milliseconds
-        # elapsed_time_ms = start.elapsed_time(end)
-        # # Convert milliseconds to seconds
-        # elapsed_time_s = elapsed_time_ms / 1000
-        # # Convert seconds to minutes
-        # elapsed_time_min = elapsed_time_s / 60
-
-        # print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
-        
      except Exception as e:
         print(f"An error occurred: {e}")
+
+#################################
+# Epochs : 30
+# Batch : 15
+# ------UNet-------
+# Elapsed time for UNet: 3.39 minutes
+# Best val loss: 0.428450
+# Model saved to UNet_RetinaVessel.pth
+
+#-------UNetBatchNorm-----
+# Elapsed time for UNetBatchNorm: 16.30 minutes
+# Best val loss: 0.446052
+# Model saved to UNetBatchNorm_RetinaVessel.pth
+
