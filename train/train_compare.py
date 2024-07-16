@@ -64,7 +64,7 @@ def plot_metrics(metrics1, metrics2, metrics3, metric_name):
     plt.xlabel('Epochs')
     plt.ylabel(metric_name)
     plt.legend()
-    plt.savefig(f'{metric_name}_comparison.png')
+    plt.savefig(f'train/results/compare_results/{metric_name}_comparison.png')
     plt.close()
 
 def measure_inference_time(model, input_tensor, num_iterations=100):
@@ -207,9 +207,9 @@ def run():
     print("\n")
 
     # Speichern der trainierten Modelle
-    torch.save(model1.state_dict(), 'UNet_RetinaVessel.pth')
-    torch.save(model2.state_dict(), 'UNetMaxPool_RetinaVessel.pth')
-    torch.save(model3.state_dict(), 'UNetBatchNorm_RetinaVessel.pth')
+    torch.save(model1.state_dict(), 'train/results/compare_results/UNet_RetinaVessel.pth')
+    torch.save(model2.state_dict(), 'train/results/compare_results/UNetMaxPool_RetinaVessel.pth')
+    torch.save(model3.state_dict(), 'train/results/compare_results/UNetBatchNorm_RetinaVessel.pth')
     print("Models saved to disk")
 
 if __name__ == '__main__':
