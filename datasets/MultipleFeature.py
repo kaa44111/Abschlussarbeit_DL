@@ -83,39 +83,6 @@ class CustomDataset(Dataset):
             print(f"Error loading data at index {idx}: {e}")
             return None,None  # Return dummy values
 
-# def get_dataloaders():
-
-#     transformations = v2.Compose([
-#             v2.ToPureTensor(),
-#             v2.ToDtype(torch.float32, scale=True),
-#             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-#             ])
-
-#     custom_dataset = CustomDataset('data', transform=transformations)
-
-#     # Definieren Sie die Größen für das Training und die Validierung
-#     dataset_size = len(custom_dataset)
-#     train_size = int(0.8 * dataset_size)
-#     val_size = dataset_size - train_size
-
-#     # Aufteilen des Datensatzes in Trainings- und Validierungsdaten
-#     train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
-
-#     # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
-#     print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
-#     print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
-
-#     # Erstellen der DataLoader für Training und Validierung
-#     train_loader = DataLoader(train_dataset, batch_size=25, shuffle=False)
-#     val_loader = DataLoader(val_dataset, batch_size=25, shuffle=False)
-
-#     #Creating Dataloaders:
-#     dataloaders = {
-#         'train': train_loader,
-#         'val': val_loader
-#     }
-
-#     return dataloaders,custom_dataset
 
 
 def get_data_loaders():
@@ -212,3 +179,39 @@ if __name__ == '__main__':
             
     except Exception as e:
         print(f"An error occurred: {e}")
+        
+        
+        
+# def get_dataloaders():
+
+#     transformations = v2.Compose([
+#             v2.ToPureTensor(),
+#             v2.ToDtype(torch.float32, scale=True),
+#             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+#             ])
+
+#     custom_dataset = CustomDataset('data', transform=transformations)
+
+#     # Definieren Sie die Größen für das Training und die Validierung
+#     dataset_size = len(custom_dataset)
+#     train_size = int(0.8 * dataset_size)
+#     val_size = dataset_size - train_size
+
+#     # Aufteilen des Datensatzes in Trainings- und Validierungsdaten
+#     train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
+
+#     # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
+#     print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
+#     print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
+
+#     # Erstellen der DataLoader für Training und Validierung
+#     train_loader = DataLoader(train_dataset, batch_size=25, shuffle=False)
+#     val_loader = DataLoader(val_dataset, batch_size=25, shuffle=False)
+
+#     #Creating Dataloaders:
+#     dataloaders = {
+#         'train': train_loader,
+#         'val': val_loader
+#     }
+
+#     return dataloaders,custom_dataset
