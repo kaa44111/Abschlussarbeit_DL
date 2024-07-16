@@ -14,6 +14,7 @@ import torch.nn.functional as F
 import seaborn as sns
 import matplotlib.pyplot as plt
 from models.UNet import UNet
+from models.UNetBatchNorm import UNetBatchNorm
 from utils.data_utils import compute_mean_std
 import matplotlib
 matplotlib.use('TkAgg')  # Backend auf TkAgg umstellen
@@ -81,21 +82,21 @@ def show_predictions(images, preds, idx):
     plt.show()
 
 
-def test(UNet):
+def test(UNet,trained_path):
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('normalized_RetinaVessel.pth', map_location=device))
+    model.load_state_dict(torch.load(trained_path, map_location=device))
     model.eval()
     
-    mean, std = compute_mean_std('data_modified/RetinaVessel/train/grabs')
+    #mean, std = compute_mean_std('data_modified/RetinaVessel/train/grabs')
 
     transformations = v2.Compose([
-        #v2.RandomEqualize(p=1.0),
+        v2.RandomEqualize(p=1.0),
         v2.ToPureTensor(),
         v2.ToDtype(torch.float32, scale=True),
-        v2.Normalize(mean=mean, std=std)
+        #v2.Normalize(mean=mean, std=std)
     ])
 
     test_dataset = ImageOnlyDataset('data_modified/RetinaVessel/test', transform=transformations)
@@ -116,6 +117,11 @@ def test(UNet):
 
 if __name__ == '__main__':
     try:
-        test(UNet)
+        trained_path = 'test_RetinaVessel.pth'
+        test(UNet,trained_path) 
+               
+        # trained_path = 'UNetBatchNorm_RetinaVessel.pth'
+        # test(UNetBatchNorm,trained_path)
+
     except Exception as e:
         print(f"An error occurred: {e}")
