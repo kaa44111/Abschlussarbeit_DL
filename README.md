@@ -52,7 +52,7 @@ Speichert die verschiedenen Ergebnisse der antrainierten Modelle.
 
 ## Installation
 
-## Datensätze
+## Datasets
 Die Originalbilder befinden sich im Ordner data. Modifizierte Bilder werden im Ordner data_modified gespeichert. Verwende die Skripte im Ordner prepare zur Vorverarbeitung der Bilder.
 
 ## Modelle
