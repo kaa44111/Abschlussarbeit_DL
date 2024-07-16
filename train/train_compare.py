@@ -94,7 +94,6 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
         for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
-                scheduler.step()
                 for param_group in optimizer.param_groups:
                     print("LR", param_group['lr'])
             else:
@@ -116,6 +115,7 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
+                        scheduler.step()  # lr_scheduler.step() nach optimizer.step() aufrufen
 
                 epoch_samples += inputs.size(0)
 
