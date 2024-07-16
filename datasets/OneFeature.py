@@ -33,7 +33,7 @@ class CustomDataset(Dataset):
         # Filtere die Bilddateien, für die auch Masken existieren
         self.image_files = []
         self.mask_files = []
-        i=1
+        
         for image_file in all_image_files:
             base_name = os.path.splitext(image_file)[0]
             mask_name = f"{base_name}.tiff" #for RetinaVessel
@@ -95,7 +95,6 @@ def get_dataloaders(root_dir):
     # Definieren Sie die Größen für das Training und die Validierung
     dataset_size = len(custom_dataset)
     train_size = int(0.8 * dataset_size)
-    val_size = dataset_size - train_size
 
     # Generieren Sie reproduzierbare Indizes für Training und Validierung
     indices = list(range(dataset_size))

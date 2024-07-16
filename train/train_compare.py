@@ -16,7 +16,7 @@ import time
 from collections import defaultdict
 import matplotlib.pyplot as plt
 
-from datasets.WireCheck_dataset import get_dataloaders
+from datasets.OneFeature import get_dataloaders
 from models.UNetBatchNorm import UNetBatchNorm
 from models.UNet import UNet
 from models.UNetMaxPool import UNetMaxPool
@@ -179,10 +179,12 @@ def run():
     plot_metrics(history1, history2, history3, 'val_loss')
     plot_metrics(history1, history2, history3, 'val_dice')
 
+    print("\n")
     # Vergleich der Trainingszeiten
     print(f"UNet training time: {time1:.2f} seconds")
     print(f"UNetMaxPool training time: {time2:.2f} seconds")
     print(f"UNetBatchNorm training time: {time3:.2f} seconds")
+    print("\n")
 
     # Inferenzzeit messen
     '''Zeit, die ein Modell benötigt, um eine Vorhersage für ein einzelnes Eingabebild zu machen'''
@@ -193,6 +195,7 @@ def run():
     print(f"UNet inference time: {inference_time1:.4f} seconds")
     print(f"UNetMaxPool inference time: {inference_time2:.4f} seconds")
     print(f"UNetBatchNorm inference time: {inference_time3:.4f} seconds")
+    print("\n")
 
     # Anzahl der Parameter
     params1 = count_parameters(model1)
@@ -201,6 +204,7 @@ def run():
     print(f"UNet parameters: {params1}")
     print(f"UNetMaxPool parameters: {params2}")
     print(f"UNetBatchNorm parameters: {params3}")
+    print("\n")
 
     # Speichern der trainierten Modelle
     torch.save(model1.state_dict(), 'UNet_RetinaVessel.pth')
@@ -213,3 +217,23 @@ if __name__ == '__main__':
         run()
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+# UNet Best val loss: 0.628031
+# UNetMaxPool Best val loss: 0.633133
+# UNetBatchNorm Best val loss: 0.467543
+
+
+# UNet training time: 4m 18s
+# UNetMaxPool training time: 1m 12s
+# UNetBatchNorm training time: 20m 8s
+
+
+# UNet inference time: 0.0410 seconds
+# UNetMaxPool inference time: 0.0428 seconds
+# UNetBatchNorm inference time: 0.0566 seconds
+
+
+# UNet parameters: 31031745
+# UNetMaxPool parameters: 31031745
+# UNetBatchNorm parameters: 31043521

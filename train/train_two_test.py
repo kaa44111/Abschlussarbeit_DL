@@ -18,7 +18,7 @@ import copy
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
-from datasets.WireCheck_dataset import get_dataloaders
+from datasets.OneFeature import get_dataloaders
 from models.UNetBatchNorm import UNetBatchNorm
 from models.UNet import UNet
 

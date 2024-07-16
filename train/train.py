@@ -19,8 +19,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 #from datasets.OneFeature_dataset import get_dataloaders
-#from datasets.Geometry_dataset import get_data_loaders
-from datasets.WireCheck_dataset import get_dataloaders
+#from datasets.MultipleFeature import get_data_loaders
+from datasets.OneFeature import get_dataloaders
 
 def renormalize(tensor):
         minFrom= tensor.min()
@@ -230,25 +230,6 @@ if __name__ == '__main__':
         elapsed_time_min = elapsed_time_s / 60
 
         print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
-
-        # start = torch.cuda.Event(enable_timing=True)
-        # end = torch.cuda.Event(enable_timing=True)
-
-        # start.record()
-        # run(UNet)
-        # end.record()
-
-        # # Waits for everything to finish running
-        # torch.cuda.synchronize()
-
-        # # Get the elapsed time in milliseconds
-        # elapsed_time_ms = start.elapsed_time(end)
-        # # Convert milliseconds to seconds
-        # elapsed_time_s = elapsed_time_ms / 1000
-        # # Convert seconds to minutes
-        # elapsed_time_min = elapsed_time_s / 60
-
-        # print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
         
      except Exception as e:
         print(f"An error occurred: {e}")

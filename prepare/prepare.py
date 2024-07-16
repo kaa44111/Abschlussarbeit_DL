@@ -10,7 +10,7 @@ import torch
 from PIL import Image
 from torchvision.transforms import v2
 from torchvision import transforms
-from datasets.WireCheck_dataset import CustomDataset
+from datasets.OneFeature import CustomDataset
 from utils.data_utils import show_normalized_images ,show_image_and_mask, compute_mean_std, compute_mean_std_from_dataset
 
 def downsample_image(input_path, output_path, scale_factor):

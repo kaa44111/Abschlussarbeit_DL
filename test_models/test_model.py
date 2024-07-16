@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from models.UNet import UNet
 #from datasets.Geometry_dataset import CustomDataset
 #from datasets.OneFeature_dataset import CustomDataset
-from datasets.WireCheck_dataset import CustomDataset
+from datasets.OneFeature import CustomDataset
 from utils.heatmap_utils import show_masks_pred1, show_masks_pred, save_valuation
 from torchvision.transforms import v2 
 import seaborn as sns
