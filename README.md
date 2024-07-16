@@ -51,3 +51,33 @@ Speichert die verschiedenen Ergebnisse der antrainierten Modelle.
 - `test_different_models.py`: Testet gleichzeitig alle Ergebnisse aus den 3 Modellvariationen und speichert die Ergebnisse.
 
 ## Installation
+Datensätze
+Die Originalbilder befinden sich im Ordner data. Modifizierte Bilder werden im Ordner data_modified gespeichert. Verwende die Skripte im Ordner prepare zur Vorverarbeitung der Bilder.
+
+## Modelle
+Die Modelldefinitionen befinden sich im Ordner models. Drei Variationen des UNet-Modells sind verfügbar:
+
+Original UNet (UNet.py)
+UNet mit Batch Normalization (UNetBatchNorm.py)
+UNet ohne MaxPooling (UNetNoMaxPool.py)
+
+## Vorverarbeitung
+Verwende die Skripte im Ordner prepare zur Vorverarbeitung der Bilder:
+
+prepare_patches.py: Teilt Bilder in kleinere Patches auf.
+prepare_binning.py: Führt Binning auf den Bildern durch.
+Zukünftig: prepare_both.py: Führt zuerst das Binning und dann das Aufteilen in Patches durch.
+Training
+Verwende das Skript train_model.py im Ordner training, um die Modelle mit den vorbereiteten Datensätzen zu trainieren. Passe die Hyperparameter nach Bedarf an. Verwende lr_scheduler.py zur Anpassung der Lernrate während des Trainings.
+
+## Ergebnisse
+Die Ergebnisse des Modelltrainings werden im Ordner results gespeichert. Dies umfasst Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.
+
+## Testen der Modelle
+Verwende das Skript test_different_models.py im Ordner test_models, um die Ergebnisse der verschiedenen Modellvariationen zu testen und zu vergleichen.
+
+## Zukünftige Arbeiten
+Hinzufügen eines Skripts prepare_both.py, das zuerst Binning durchführt und dann die Bilder in Patches aufteilt.
+Erweiterung des WireCheck-Datensatzes.
+## Autoren
+Dieses Projekt wurde von Amina entwickelt. Weitere Beiträge sind willkommen!
