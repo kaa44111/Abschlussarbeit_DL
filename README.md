@@ -51,7 +51,8 @@ Speichert die verschiedenen Ergebnisse der antrainierten Modelle.
 - `test_different_models.py`: Testet gleichzeitig alle Ergebnisse aus den 3 Modellvariationen und speichert die Ergebnisse.
 
 ## Installation
-Datensätze
+
+## Datensätze
 Die Originalbilder befinden sich im Ordner data. Modifizierte Bilder werden im Ordner data_modified gespeichert. Verwende die Skripte im Ordner prepare zur Vorverarbeitung der Bilder.
 
 ## Modelle
