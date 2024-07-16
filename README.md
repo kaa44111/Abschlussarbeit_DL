@@ -1,6 +1,13 @@
-# Deep Learning Image Segmentation
+# Evaluierung von Einsatzmöglichkeiten einer Deep Learning Applikation zur Detektion gelabelter Merkmale in Bildern
 
-Dieses Repository enthält verschiedene Modelle und Methoden zur Bildsegmentierung mit Deep Learning. Es umfasst Datensätze, Modelle, Vorverarbeitungsmethoden und Testskripte.
+Dieses Repository enthält den Code und die Dokumentation zu meiner Bachelorarbeit mit dem Titel: 
+„Evaluierung von Einsatzmöglichkeiten einer Deep Learning Applikation zur Detektion gelabelter Merkmale in Bildern“.
+
+## Themenschwerpunkte
+- **Einarbeitung in den Stand der Technik und Literaturrecherche**: Untersuchung aktueller Methoden und Technologien im Bereich der Bildsegmentierung und Deep Learning.
+- **Präparierung von Bilddaten**: Vorbereitung der Bilddaten durch Labeln und Datenaugmentation mithilfe verfügbarer Bildverarbeitungssoftware.
+- **Auswahl geeigneter Softwarebibliotheken zur Modellbildung**: Identifikation und Nutzung geeigneter Bibliotheken und Frameworks für die Modellierung.
+- **Validierung der Auswahl und Bewertung der Ergebnisse**: Bewertung der Modellleistung anhand verschiedener Metriken und Validierung der Ergebnisse.
 
 ## Inhaltsverzeichnis
 - [Struktur](#struktur)
@@ -52,6 +59,9 @@ Verschiedene Methoden zur Vorbereitung der Bilder.
 Enthält Skripte und Methoden zum Training der Modelle.
 - `train_compare.py`: Hauptskript zum Training der Modelle. Enthält Funktionen zur Anpassung von Hyperparametern, Speicherung von Modellen und Überwachung des Trainingsfortschritts.
 - `results`: Unterordner, der die Ergebnisse der antrainierten Modelle speichert. (einschließlich Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)*
+- 
+### utils
+Enthält verschiedene Hilfsfunktionen und Tools, die im Projekt verwendet werden.
 
 ## Installation
 1. Klone das Repository:
