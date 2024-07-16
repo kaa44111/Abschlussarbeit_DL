@@ -56,7 +56,7 @@ Enthält Skripte und Methoden zum Training der Modelle.
 ## Installation
 1. Klone das Repository:
    ```bash
-   git clone [<repository-url>](https://github.com/kaa44111/Abschlussarbeit_DL.git)
+   git clone [https://github.com/kaa44111/Abschlussarbeit_DL.git]
 2. Navigiere in das Repository-Verzeichnis:
    cd Abschlussarbeit_DL
 3. Installiere die benötigten Pakete:
