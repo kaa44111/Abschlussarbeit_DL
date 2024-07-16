@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from models.UNet import UNet
 from models.UNetBatchNorm import UNetBatchNorm
 import matplotlib
+from torchvision import tv_tensors
 matplotlib.use('TkAgg')  # Backend auf TkAgg umstellen
 
 
@@ -33,7 +34,7 @@ class ImageOnlyDataset(Dataset):
         try:
             img_name = os.path.join(self.image_dir, self.image_files[idx])
             image = Image.open(img_name).convert('RGB')
-            image = v2.pil_to_tensor(image).float() / 255.0
+            image = tv_tensors.Image(image)
 
             if self.transform:
                 image = self.transform(image)
@@ -102,9 +103,9 @@ def test(UNet, UNetMaxPool, UNetBatchNorm):
             pred3 = pred3.squeeze().cpu().numpy()
 
             # Save heatmaps
-            save_heatmap(pred1, filenames[0], 'heatmaps_UNet')
-            save_heatmap(pred2, filenames[0], 'heatmaps_UNetMaxPool')
-            save_heatmap(pred3, filenames[0], 'heatmaps_UNetBatchNorm')
+            save_heatmap(pred1, filenames[0], 'evaluate/heatmaps_UNet')
+            save_heatmap(pred2, filenames[0], 'evaluate/heatmaps_UNetMaxPool')
+            save_heatmap(pred3, filenames[0], 'evaluate/heatmaps_UNetBatchNorm')
 
     print("Heatmaps saved in 'heatmaps_UNet', 'heatmaps_UNetMaxPool', and 'heatmaps_UNetBatchNorm' folders.")
 
