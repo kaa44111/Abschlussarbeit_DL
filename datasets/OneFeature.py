@@ -18,7 +18,7 @@ import torchvision.transforms.functional as F
 from torchvision import transforms
 
 class CustomDataset(Dataset):
-    def __init__(self, root_dir, dataset_name, transform=None, count=None):
+    def __init__(self, root_dir, dataset_name=None, transform=None, count=None):
         self.root_dir=root_dir
         self.dataset_name = dataset_name
         self.transform = transform
@@ -36,9 +36,9 @@ class CustomDataset(Dataset):
         self.mask_files = []
         
         for image_file in all_image_files:
-            base_name = os.path.splitext(image_file)[0]
+            base_name, ext = os.path.splitext(image_file)#[0]
 
-            # Bestimme den Masken-Namen basierend auf dem dataset_name
+           # Bestimme den Masken-Namen basierend auf dem dataset_name
             if dataset_name == "RetinaVessel":
                 mask_name = f"{base_name}.tiff"
             elif dataset_name == "Wirecheck":
@@ -47,6 +47,8 @@ class CustomDataset(Dataset):
                 mask_name = f"{base_name}_1.bmp"
             elif dataset_name == "circle_data":
                 mask_name = f"{base_name}1.png"
+            elif dataset_name is None:
+                mask_name = f"{base_name}{ext}"  # Gleicher Name und Format wie das Bild
             else:
                 raise ValueError(f"Unbekannter dataset_name: {dataset_name}")
             
@@ -90,7 +92,7 @@ class CustomDataset(Dataset):
             return None, None  # Return dummy values
         
 
-def get_dataloaders(root_dir,dataset_name):
+def get_dataloaders(root_dir,dataset_name, batch_size=None):
     #mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
 
     transformations = v2.Compose([
@@ -121,9 +123,12 @@ def get_dataloaders(root_dir,dataset_name):
     # print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
     # print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
 
+    if batch_size is None:
+        batch_size=15
+
     # Erstellen der DataLoader für Training und Validierung
-    train_loader = DataLoader(train_dataset, batch_size=15, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=15, shuffle=True, num_workers=0)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
 
     # Creating Dataloaders:
     dataloaders = {
@@ -139,6 +144,7 @@ if __name__ == '__main__':
     try:
         root_dir = 'data_modified/RetinaVessel/train'
         dataset_name = 'RetinaVessel'
+        #batch_size = 15
         dataloader,custom_dataset = get_dataloaders(root_dir=root_dir,dataset_name=dataset_name)
 
         image, mask =custom_dataset[0]
