@@ -50,22 +50,23 @@ Verschiedene Methoden zur Vorbereitung der Bilder.
 - `prepare_binning.py`: Methoden, die die Bilder binned und im Ordner `modified/'name_des_original_Ordners'` speichern.
 - **Zukünftig:** `prepare_both.py`: Führt zuerst das Binning und dann das Aufteilen in Patches durch.
 
-
 ### test_models
 Überprüft die in `results` gespeicherten Ergebnisse.
 - `test_different_models.py`: Testet gleichzeitig alle Ergebnisse aus den 3 Modellvariationen und speichert die 3 Beispielergebnisse in `test_models/evaluate/{dataset_name}`.
-- `test_model.py`: testet einen einzigen UNet model. Das Modell und die Test Daten können als Eingabeparameter in die `test()`-methode übergeben werden. Beim Ausführen werden die Ursprungsmasken mit den Vorhersagen verglichen.
-- `OnlyImage_test.py`: testet nur Bilder. Modell und Testdaten werden in als Eingabeparameter in die die `test()`-methode übergeben werden. Vergleicht die Bilder mit den Vorhersagen.
+- `test_model.py`: testet einen einzigen UNet model. Das Modell und die Test Daten können als Eingabeparameter in die `test()`-methode übergeben werden. Visualisierungen der Segmentierungsergebnisse.
+- `OnlyImage_test.py`: testet nur Bilder. Modell und Testdaten werden in als Eingabeparameter in die die `test()`-methode übergeben werden. Visualisierungen der Segmentierungsergebnisse.
 
 ### train
 Enthält Skripte und Methoden zum Training der Modelle.
-Hauptskript zum Training der Modelle. Enthält Funktionen zur Anpassung von Hyperparametern, Speicherung von Modellen und Überwachung des Trainingsfortschritts.
-- `train/results`: Unterordner, der die Ergebnisse der antrainierten Modelle speichert. (einschließlich Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)*
+- `train/results`: Unterordner, der die Ergebnisse der antrainierten Modelle speichert.
 - `train/results/compare_results/{dataset_name}` : Unterordner, der die Ergebnisse aus `train_compare.py` spechert.
-- `train.py`: Trainiert einen einzigen Modell und speichert die Ergebnisse in 
+- `train.py`: Trainiert einen einzigen Modell und speichert die Ergebnisse in `train/results`.
 - `train_compare.py`: Trainiert alle 3 Modelle nach einander für einen bestimmten Dataset und vergleicht die Ergebnisse. Die Ergebnisse werden in `train/results/compare_results/{dataset_name}` gespeichert.
 - `train_two_test.py` & `train_two_models.py` sind nur test dateien
-- 
+- **Zukünftig:** :
+   - Funktionen zur Anpassung von Hyperparametern, Speicherung von Modellen und Überwachung des Trainingsfortschritts.
+   - Speichern der Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.
+   - 
 ### utils
 Enthält verschiedene Hilfsfunktionen und Tools, die im Projekt verwendet werden.
 
