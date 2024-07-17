@@ -55,7 +55,7 @@ def print_metrics(metrics, epoch_samples, phase):
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def plot_metrics(metrics1, metrics2, metrics3, metric_name):
+def plot_metrics(metrics1, metrics2, metrics3, metric_name,compare_results_dir):
     plt.figure(figsize=(10, 5))
     plt.plot(metrics1[metric_name], label='UNet')
     plt.plot(metrics2[metric_name], label='UNetMaxPool')
@@ -64,7 +64,7 @@ def plot_metrics(metrics1, metrics2, metrics3, metric_name):
     plt.xlabel('Epochs')
     plt.ylabel(metric_name)
     plt.legend()
-    plt.savefig(f'train/results/compare_results/{metric_name}_comparison.png')
+    plt.savefig(f'{compare_results_dir}/{metric_name}_comparison.png')
     plt.close()
 
 def measure_inference_time(model, input_tensor, num_iterations=100):
@@ -144,11 +144,13 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
     model.load_state_dict(best_model_wts)
     return model, history, time_elapsed_min
 
-def run(train_dir,dataset_name):
+def run(train_dir,dataset_name, num_class, batch_size):
     #root_dir = 'data_modified/RetinaVessel/train'
-    dataloaders, _ = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name)
+    compare_results_dir = os.path.join('train/results/compare_results',dataset_name)
+    os.makedirs(compare_results_dir, exist_ok=True)
+
+    dataloaders, _ = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name,batch_size=batch_size)
     
-    num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model1 = UNet(num_class)  # Originalmodell
@@ -161,6 +163,7 @@ def run(train_dir,dataset_name):
     optimizer1 = optim.Adam(filter(lambda p: p.requires_grad, model1.parameters()), lr=1e-4)
     scheduler1 = lr_scheduler.StepLR(optimizer1, step_size=30, gamma=0.1)
     model1, history1, time1 = train_model(model1, dataloaders, optimizer1, scheduler1, num_epochs=30)
+    print("\n")
 
     print("#######################################")
     print("Start training UNet Model without MaxPool:")
@@ -168,6 +171,7 @@ def run(train_dir,dataset_name):
     optimizer2 = optim.Adam(filter(lambda p: p.requires_grad, model2.parameters()), lr=1e-4)
     scheduler2 = lr_scheduler.StepLR(optimizer2, step_size=30, gamma=0.1)
     model2, history2, time2 = train_model(model2, dataloaders, optimizer2, scheduler2, num_epochs=30)
+    print("\n")
 
     print("#######################################")
     print("Start training UNet Model with BatchNorm:")
@@ -175,16 +179,24 @@ def run(train_dir,dataset_name):
     optimizer3 = optim.Adam(filter(lambda p: p.requires_grad, model3.parameters()), lr=1e-4)
     scheduler3 = lr_scheduler.StepLR(optimizer3, step_size=30, gamma=0.1)
     model3, history3, time3 = train_model(model3, dataloaders, optimizer3, scheduler3, num_epochs=30)
+    print("\n")
+
+    # Speichern der trainierten Modelle
+    torch.save(model1.state_dict(), f"{compare_results_dir}/UNet.pth")
+    torch.save(model2.state_dict(), f"{compare_results_dir}/UNetMaxPool.pth")
+    torch.save(model3.state_dict(), f"{compare_results_dir}/UNetBatchNorm.pth")
+    print("Models saved to disk")
+
 
     # Vergleich der Metriken
-    plot_metrics(history1, history2, history3, 'val_loss')
-    plot_metrics(history1, history2, history3, 'val_dice')
+    plot_metrics(history1, history2, history3, 'val_loss',compare_results_dir)
+    plot_metrics(history1, history2, history3, 'val_dice',compare_results_dir)
 
     print("\n")
     # Vergleich der Trainingszeiten
-    print(f"UNet training time: {time1:.2f} seconds")
-    print(f"UNetMaxPool training time: {time2:.2f} seconds")
-    print(f"UNetBatchNorm training time: {time3:.2f} seconds")
+    print(f"UNet training time: {time1:.2f} min")
+    print(f"UNetMaxPool training time: {time2:.2f} min")
+    print(f"UNetBatchNorm training time: {time3:.2f} min")
     print("\n")
 
     # Inferenzzeit messen
@@ -207,18 +219,14 @@ def run(train_dir,dataset_name):
     print(f"UNetBatchNorm parameters: {params3}")
     print("\n")
 
-    # Speichern der trainierten Modelle
-    compare_results = os.path.join('train/results/compare_results',dataset_name)
-    torch.save(model1.state_dict(), f"{compare_results}/UNet.pth")
-    torch.save(model2.state_dict(), f"{compare_results}/UNetBatchNorm.pth")
-    torch.save(model3.state_dict(), f"{compare_results}/UNetBatchNorm.pth")
-    print("Models saved to disk")
-
+    
 if __name__ == '__main__':
     try:
         train_dir = 'data_modified/RetinaVessel/train'
         dataset_name = 'RetinaVessel'
-        run(train_dir,dataset_name)
+        batch_size = 15
+        num_class = 1
+        run(train_dir,dataset_name, num_class, batch_size)
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -236,6 +244,22 @@ if __name__ == '__main__':
 # UNet inference time: 0.0410 seconds
 # UNetMaxPool inference time: 0.0428 seconds
 # UNetBatchNorm inference time: 0.0566 seconds
+
+
+# UNet parameters: 31031745
+# UNetMaxPool parameters: 31031745
+# UNetBatchNorm parameters: 31043521
+
+#_________________________________
+
+# UNet training time: 3.34 min
+# UNetMaxPool training time: 0.99 min
+# UNetBatchNorm training time: 19.07 min
+
+
+# UNet inference time: 0.0181 min
+# UNetMaxPool inference time: 0.0266 min
+# UNetBatchNorm inference time: 0.0298 min
 
 
 # UNet parameters: 31031745
