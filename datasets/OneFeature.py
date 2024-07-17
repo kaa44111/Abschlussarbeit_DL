@@ -18,8 +18,9 @@ import torchvision.transforms.functional as F
 from torchvision import transforms
 
 class CustomDataset(Dataset):
-    def __init__(self, root_dir, transform=None, count=None):
+    def __init__(self, root_dir, dataset_name, transform=None, count=None):
         self.root_dir=root_dir
+        self.dataset_name = dataset_name
         self.transform = transform
         self.count = count
 
@@ -36,10 +37,19 @@ class CustomDataset(Dataset):
         
         for image_file in all_image_files:
             base_name = os.path.splitext(image_file)[0]
-            mask_name = f"{base_name}.tiff" #for RetinaVessel
-            #mask_name = f"{base_name}.tif" #for Wirecheck
-            #mask_name = f'{base_name}_1.bmp' #for Ölflecken
-            #mask_name = f"{base_name}1.png" #for circle_data
+
+            # Bestimme den Masken-Namen basierend auf dem dataset_name
+            if dataset_name == "RetinaVessel":
+                mask_name = f"{base_name}.tiff"
+            elif dataset_name == "Wirecheck":
+                mask_name = f"{base_name}.tif"
+            elif dataset_name == "Ölflecken":
+                mask_name = f"{base_name}_1.bmp"
+            elif dataset_name == "circle_data":
+                mask_name = f"{base_name}1.png"
+            else:
+                raise ValueError(f"Unbekannter dataset_name: {dataset_name}")
+            
             if os.path.exists(os.path.join(self.mask_folder, mask_name)):
                 self.image_files.append(image_file)
                 self.mask_files.append(mask_name)
@@ -80,17 +90,17 @@ class CustomDataset(Dataset):
             return None, None  # Return dummy values
         
 
-def get_dataloaders(root_dir):
+def get_dataloaders(root_dir,dataset_name):
     #mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
 
     transformations = v2.Compose([
         v2.RandomEqualize(p=1.0),
         v2.ToPureTensor(),
         v2.ToDtype(torch.float32, scale=True),
-        #v2.Normalize(mean=mean, std=std)
+        #v2.Normalize(mean=mean, std=std),
     ])
 
-    custom_dataset = CustomDataset(root_dir=root_dir, transform=transformations)
+    custom_dataset = CustomDataset(root_dir=root_dir, dataset_name=dataset_name, transform=transformations)
 
     # Definieren Sie die Größen für das Training und die Validierung
     dataset_size = len(custom_dataset)
@@ -128,7 +138,8 @@ if __name__ == '__main__':
     
     try:
         root_dir = 'data_modified/RetinaVessel/train'
-        dataloader,custom_dataset = get_dataloaders(root_dir=root_dir)
+        dataset_name = 'RetinaVessel'
+        dataloader,custom_dataset = get_dataloaders(root_dir=root_dir,dataset_name=dataset_name)
 
         image, mask =custom_dataset[0]
         print('Image:')
@@ -151,9 +162,9 @@ if __name__ == '__main__':
         print(f"First image min: {images[0].min()}, max: {images[0].max()}")
         print(f"First mask min: {masks[0].min()}, max: {masks[0].max()}") 
 
-        # # Überprüfung der Bilder im Dataloader
-        # for i in range(4):
-        #     show_image_and_mask(images[i],masks[i])  
+        # Überprüfung der Bilder im Dataloader
+        for i in range(4):
+            show_image_and_mask(images[i],masks[i])  
 
     except Exception as e:
         print(f"An error occurred: {e}")
