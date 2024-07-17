@@ -34,7 +34,7 @@ def dice_loss(pred, target, smooth=1.):
 def calc_loss(pred, target, metrics, bce_weight=0.5):
     bce = F.binary_cross_entropy_with_logits(pred, target)
 
-    pred = torch.sigmoid(pred)
+    pred = F.sigmoid(pred)
     dice = dice_loss(pred, target)
 
     loss = bce * bce_weight + dice * (1 - bce_weight)
@@ -95,9 +95,11 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
-                model.train()  # Set model to training mode
+                scheduler.step()
                 for param_group in optimizer.param_groups:
                     print("LR", param_group['lr'])
+
+                model.train()  # Set model to training mode
             else:
                 model.eval()  # Set model to evaluate mode
 
@@ -117,7 +119,6 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-                        scheduler.step()  # lr_scheduler.step() nach optimizer.step() aufrufen
 
                 epoch_samples += inputs.size(0)
 
@@ -205,9 +206,9 @@ def run(train_dir,dataset_name, num_class, batch_size):
     inference_time1 = measure_inference_time(model1, sample_input)
     inference_time2 = measure_inference_time(model2, sample_input)
     inference_time3 = measure_inference_time(model3, sample_input)
-    print(f"UNet inference time: {inference_time1:.4f} min")
-    print(f"UNetMaxPool inference time: {inference_time2:.4f} min")
-    print(f"UNetBatchNorm inference time: {inference_time3:.4f} min")
+    print(f"UNet inference time: {inference_time1:.4f} seconds")
+    print(f"UNetMaxPool inference time: {inference_time2:.4f} seconds")
+    print(f"UNetBatchNorm inference time: {inference_time3:.4f} seconds")
     print("\n")
 
     # Anzahl der Parameter
@@ -257,9 +258,9 @@ if __name__ == '__main__':
 # UNetBatchNorm training time: 19.07 min
 
 
-# UNet inference time: 0.0181 min
-# UNetMaxPool inference time: 0.0266 min
-# UNetBatchNorm inference time: 0.0298 min
+# UNet inference time: 0.0181 seconds
+# UNetMaxPool inference time: 0.0266 seconds
+# UNetBatchNorm inference time: 0.0298 seconds
 
 
 # UNet parameters: 31031745
