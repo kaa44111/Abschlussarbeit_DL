@@ -78,11 +78,12 @@ def test(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm):
 
     test_dataset = ImageOnlyDataset(test_dir, transform=transformations)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
-
+    
+    evaluate_dir = os.path.join('test_models/evaluate',dataset_name)
     # Create directories for saving heatmaps
-    os.makedirs('test_models/evaluate/heatmaps_UNet', exist_ok=True)
-    os.makedirs('test_models/evaluate/heatmaps_UNetMaxPool', exist_ok=True)
-    os.makedirs('test_models/evaluate/heatmaps_UNetBatchNorm', exist_ok=True)
+    os.makedirs(f'{evaluate_dir}/heatmaps_UNet', exist_ok=True)
+    os.makedirs(f'{evaluate_dir}/heatmaps_UNetMaxPool', exist_ok=True)
+    os.makedirs(f'{evaluate_dir}/heatmaps_UNetBatchNorm', exist_ok=True)
 
     with torch.no_grad():
         for images, filenames in test_loader:
