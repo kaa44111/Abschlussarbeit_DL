@@ -9,14 +9,13 @@ if project_path not in sys.path:
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from models.UNet import UNet
-#from datasets.Geometry_dataset import CustomDataset
-#from datasets.OneFeature_dataset import CustomDataset
-from datasets.OneFeature import CustomDataset
-from utils.heatmap_utils import show_masks_pred1, show_masks_pred, save_valuation
 from torchvision.transforms import v2 
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+from datasets.OneFeature import CustomDataset
+from utils.heatmap_utils import show_masks_pred1, show_masks_pred, save_valuation
+
 
 def show_predictions(images, masks, preds, idx):
     """
@@ -46,13 +45,13 @@ def show_predictions(images, masks, preds, idx):
     plt.tight_layout()
     plt.show()
 
-def test(UNet):
+def test(UNet,test_dir,dataset_name,test_trained_model):
     num_class = 1
     #num_class = 6
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model = UNet(num_class).to(device)
-    model.load_state_dict(torch.load('test_RetinaVessel.pth', map_location=device))
+    model.load_state_dict(torch.load(test_trained_model, map_location=device))
     model.eval()
 
     # trans = v2.Compose([
@@ -76,7 +75,7 @@ def test(UNet):
             #v2.Normalize(mean=mean, std=std)
         ])
 
-    test_dataset = CustomDataset('data_modified/RetinaVessel/train', transform=transformations, count=3)
+    test_dataset = CustomDataset(test_dir, dataset_name=dataset_name, transform=transformations, count=3)
     test_loader = DataLoader(test_dataset, batch_size=3, shuffle=True, num_workers=0)
 
     images, masks_tensor = next(iter(test_loader))
@@ -101,6 +100,15 @@ def test(UNet):
 
 if __name__ == '__main__':
     try:
-        test(UNet)
+        from models.UNet import UNet
+        #from models.UNetBatchNorm import UNetBatchNorm
+        #from models.UNetMaxPool import UNetMaxPool
+
+        test_dir = 'data/Ölflecken'
+        dataset_name = 'Ölflecken'
+        test_trained_model = 'train/results/Ölflecken/test_train.pth'
+
+        test(UNet,test_dir,dataset_name,test_trained_model)
+
     except Exception as e:
         print(f"An error occurred: {e}")
