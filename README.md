@@ -96,17 +96,17 @@ Verwende die Skripte im Ordner `prepare` zur Vorverarbeitung der Bilder:
 - Zukünftig: `prepare_both.py`: Führt zuerst das Binning und dann das Aufteilen in Patches durch.
 
 ## Training
-Verwende das Skript `train.py` im Ordner `train`, um ein beliebiges Modell mit den vorbereiteten Datensätzen zu trainieren. Passe die Hyperparameter nach Bedarf an. (Verwende lr_scheduler.py zur Anpassung der Lernrate während des Trainings.)
-Verwende das Skript `train_compare.py` im Ordner `train`, um alle 3 Modelle mit den vorbereiteten Datensätzen zu trainieren.
+- Verwende das Skript `train.py` im Ordner `train`, um ein beliebiges Modell mit den vorbereiteten Datensätzen zu trainieren. Passe die Hyperparameter nach Bedarf an. (Verwende lr_scheduler.py zur Anpassung der Lernrate während des Trainings.)
+- Verwende das Skript `train_compare.py` im Ordner `train`, um alle 3 Modelle mit den vorbereiteten Datensätzen zu trainieren.
 
 ## Ergebnisse
-Die Ergebnisse eines Modelltrainings werden im Ordner `train/results/{dataset_name}` gespeichert. (Dies umfasst Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)
-Die Ergebnisse von alle 3 Modelltrainings werden im Ordner `train/results/compare_results/{dataset_name}` gespeichert.
+- Die Ergebnisse *eines* Modelltrainings werden im Ordner `train/results/{dataset_name}` gespeichert. (Dies umfasst Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)
+- Die Ergebnisse von *alle 3* Modelltraining werden im Ordner `train/results/compare_results/{dataset_name}` gespeichert.
 
 ## Testen der Modelle
-Verwende das Skript `test_model.py` im Ordner `test_models`, um die Ergebnisse einer Modellvariationen zu testen und zu vergleichen.
-Verwende das Skript `test_different_models.py` im Ordner `test_models`, um die Ergebnisse der verschiedenen Modellvariationen zu testen und zu vergleichen.
-Verwende das Skript `OnlyImage_test.py`im Ordner `test_models`, um die Ergebnisse einer Modellvariationen zu testen und mit den Test Bildern zu vergleichen.
+- Verwende das Skript `test_model.py` im Ordner `test_models`, um die Ergebnisse *einer Modellvariationen* zu testen und zu vergleichen.
+- Verwende das Skript `test_different_models.py` im Ordner `test_models`, um die Ergebnisse der *verschiedenen Modellvariationen* zu testen und zu vergleichen.
+- Verwende das Skript `OnlyImage_test.py`im Ordner `test_models`, um die Ergebnisse einer Modellvariationen zu testen und mit den Test Bildern zu vergleichen.
 
 ## Zukünftige Arbeiten
 Hinzufügen eines Skripts prepare_both.py, das zuerst Binning durchführt und dann die Bilder in Patches aufteilt.
