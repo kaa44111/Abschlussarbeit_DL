@@ -53,12 +53,18 @@ Verschiedene Methoden zur Vorbereitung der Bilder.
 
 ### test_models
 Überprüft die in `results` gespeicherten Ergebnisse.
-- `test_different_models.py`: Testet gleichzeitig alle Ergebnisse aus den 3 Modellvariationen und speichert die Ergebnisse.
+- `test_different_models.py`: Testet gleichzeitig alle Ergebnisse aus den 3 Modellvariationen und speichert die 3 Beispielergebnisse in `test_models/evaluate/{dataset_name}`.
+- `test_model.py`: testet einen einzigen UNet model. Das Modell und die Test Daten können als Eingabeparameter in die `test()`-methode übergeben werden. Beim Ausführen werden die Ursprungsmasken mit den Vorhersagen verglichen.
+- `OnlyImage_test.py`: testet nur Bilder. Modell und Testdaten werden in als Eingabeparameter in die die `test()`-methode übergeben werden. Vergleicht die Bilder mit den Vorhersagen.
 
 ### train
 Enthält Skripte und Methoden zum Training der Modelle.
-- `train_compare.py`: Hauptskript zum Training der Modelle. Enthält Funktionen zur Anpassung von Hyperparametern, Speicherung von Modellen und Überwachung des Trainingsfortschritts.
-- `results`: Unterordner, der die Ergebnisse der antrainierten Modelle speichert. (einschließlich Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)*
+Hauptskript zum Training der Modelle. Enthält Funktionen zur Anpassung von Hyperparametern, Speicherung von Modellen und Überwachung des Trainingsfortschritts.
+- `train/results`: Unterordner, der die Ergebnisse der antrainierten Modelle speichert. (einschließlich Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)*
+- `train/results/compare_results/{dataset_name}` : Unterordner, der die Ergebnisse aus `train_compare.py` spechert.
+- `train.py`: Trainiert einen einzigen Modell und speichert die Ergebnisse in 
+- `train_compare.py`: Trainiert alle 3 Modelle nach einander für einen bestimmten Dataset und vergleicht die Ergebnisse. Die Ergebnisse werden in `train/results/compare_results/{dataset_name}` gespeichert.
+- `train_two_test.py` & `train_two_models.py` sind nur test dateien
 - 
 ### utils
 Enthält verschiedene Hilfsfunktionen und Tools, die im Projekt verwendet werden.
@@ -90,16 +96,20 @@ Verwende die Skripte im Ordner `prepare` zur Vorverarbeitung der Bilder:
 - Zukünftig: `prepare_both.py`: Führt zuerst das Binning und dann das Aufteilen in Patches durch.
 
 ## Training
-Verwende das Skript `train_model.py` im Ordner `train`, um die Modelle mit den vorbereiteten Datensätzen zu trainieren. Passe die Hyperparameter nach Bedarf an. Verwende lr_scheduler.py zur Anpassung der Lernrate während des Trainings.
+Verwende das Skript `train.py` im Ordner `train`, um ein beliebiges Modell mit den vorbereiteten Datensätzen zu trainieren. Passe die Hyperparameter nach Bedarf an. (Verwende lr_scheduler.py zur Anpassung der Lernrate während des Trainings.)
+Verwende das Skript `train_compare.py` im Ordner `train`, um alle 3 Modelle mit den vorbereiteten Datensätzen zu trainieren.
 
 ## Ergebnisse
-Die Ergebnisse des Modelltrainings werden im Ordner `train/results` gespeichert. (Dies umfasst Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)
+Die Ergebnisse eines Modelltrainings werden im Ordner `train/results/{dataset_name}` gespeichert. (Dies umfasst Modellgewichte, Trainingsprotokolle und Visualisierungen der Segmentierungsergebnisse.)
+Die Ergebnisse von alle 3 Modelltrainings werden im Ordner `train/results/compare_results/{dataset_name}` gespeichert.
 
 ## Testen der Modelle
+Verwende das Skript `test_model.py` im Ordner `test_models`, um die Ergebnisse einer Modellvariationen zu testen und zu vergleichen.
 Verwende das Skript `test_different_models.py` im Ordner `test_models`, um die Ergebnisse der verschiedenen Modellvariationen zu testen und zu vergleichen.
+Verwende das Skript `OnlyImage_test.py`im Ordner `test_models`, um die Ergebnisse einer Modellvariationen zu testen und mit den Test Bildern zu vergleichen.
 
 ## Zukünftige Arbeiten
 Hinzufügen eines Skripts prepare_both.py, das zuerst Binning durchführt und dann die Bilder in Patches aufteilt.
-Erweiterung des WireCheck-Datensatzes.
+
 ## Autoren
-Dieses Projekt wurde von Amina entwickelt. Weitere Beiträge sind willkommen!
+Dieses Projekt wurde von Amina Kasa entwickelt.
