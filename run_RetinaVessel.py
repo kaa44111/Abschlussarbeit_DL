@@ -65,29 +65,53 @@ if __name__ == '__main__':
         dataloader,_ = get_dataloaders(root_dir=train_dir, dataset_name=dataset_name, batch_size=batch_size, transformations=transformations)
         #_____________________________________________________________
 
-        ####Training für ein Modell Starten
-        print("Train Model with RetinaVessel Dataset:")
-        run(UNet,dataloader,dataset_name,save_name)
+        # ####Training für ein Modell Starten
+        # print("Train Model with RetinaVessel Dataset:")
+        # run(UNet,dataloader,dataset_name,save_name)
 
-        results_dir = os.path.join('train/results',dataset_name)
-        trained_model = f"{results_dir}/{save_name}.pth"
+        # results_dir = os.path.join('train/results',dataset_name)
+        # trained_model = f"{results_dir}/{save_name}.pth"
 
-        ####Testen für das antrainerte Modell Starten
-        print("Test Results:")
-        test(UNet=UNet,test_dir=test_dir,trained_path=trained_model)
+        # ####Testen für das antrainerte Modell Starten
+        # print("Test Results:")
+        # test(UNet=UNet,test_dir=test_dir,trained_path=trained_model)
 
         #______________________________________________________________
 
-        # #####Training für alle Modelle Starten
-        # run_compare(train_dir,dataset_name,batch_size)
+        #####Training für alle Modelle Starten
+        run_compare(dataloader,dataset_name)
 
-        # #####Test für alle trainerte Modelle
-        # test_compare(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm)
+        #####Test für alle trainerte Modelle
+        test_compare(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm)
         
      except Exception as e:
         print(f"An error occurred: {e}")
 
-#_______________________________________________
+#_________________________________
+
+# test_different_models.py Ergebnisse:
+
+# UNet Best val loss: 0.628031
+# UNetMaxPool Best val loss: 0.633133
+# UNetBatchNorm Best val loss: 0.467543
+
+
+# UNet training time: 4m 18s
+# UNetMaxPool training time: 1m 12s
+# UNetBatchNorm training time: 20m 8s
+
+
+# UNet inference time: 0.0410 seconds
+# UNetMaxPool inference time: 0.0428 seconds
+# UNetBatchNorm inference time: 0.0566 seconds
+
+
+# UNet parameters: 31031745
+# UNetMaxPool parameters: 31031745
+# UNetBatchNorm parameters: 31043521
+
+#_________________________________
+
 # test_different_models.py Ergebnisse:
     
 # UNet training time: 3.34 min

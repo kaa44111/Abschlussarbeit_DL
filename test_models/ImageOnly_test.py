@@ -115,18 +115,18 @@ def test(UNet,test_dir,trained_path):
     # Show predictions
     show_predictions(images, pred, 0)
 
-if __name__ == '__main__':
-    try:
-        from models.UNet import UNet
-        #from models.UNetBatchNorm import UNetBatchNorm
-        #from models.UNetMaxPool import UNetMaxPool
+# if __name__ == '__main__':
+#     try:
+#         from models.UNet import UNet
+#         #from models.UNetBatchNorm import UNetBatchNorm
+#         #from models.UNetMaxPool import UNetMaxPool
 
-        test_dir = 'data_modified/RetinaVessel/test'
-        trained_path = 'train/results/RetinaVessel/test_train.pth'
-        test(UNet,test_dir,trained_path) 
+#         test_dir = 'data_modified/RetinaVessel/test'
+#         trained_path = 'train/results/RetinaVessel/test_train.pth'
+#         test(UNet,test_dir,trained_path) 
                
-        # trained_path = 'UNetBatchNorm_RetinaVessel.pth'
-        # test(UNetBatchNorm,trained_path)
+#         # trained_path = 'UNetBatchNorm_RetinaVessel.pth'
+#         # test(UNetBatchNorm,trained_path)
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
+#     except Exception as e:
+#         print(f"An error occurred: {e}")

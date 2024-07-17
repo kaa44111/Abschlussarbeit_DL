@@ -91,16 +91,14 @@ class CustomDataset(Dataset):
             print(f"Error loading data at index {idx}: {e}")
             return None, None  # Return dummy values
         
+'''!!To Do move specific Transformations to __main__ in the train.py or test.py'''
+def get_dataloaders(root_dir,dataset_name, batch_size=None, transformations=None):
 
-def get_dataloaders(root_dir,dataset_name, batch_size=None):
-    #mean, std = compute_mean_std(os.path.join(root_dir, 'grabs'))
-
-    transformations = v2.Compose([
-        v2.RandomEqualize(p=1.0),
-        v2.ToPureTensor(),
-        v2.ToDtype(torch.float32, scale=True),
-        #v2.Normalize(mean=mean, std=std),
-    ])
+    if transformations is None:
+        transformations = v2.Compose([
+            v2.ToPureTensor(),
+            v2.ToDtype(torch.float32, scale=True),
+        ])
 
     custom_dataset = CustomDataset(root_dir=root_dir, dataset_name=dataset_name, transform=transformations)
 

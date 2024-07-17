@@ -72,7 +72,7 @@ def save_combined_image(image, pred1, pred2, pred3, filename, save_dir):
     plt.savefig(os.path.join(save_dir, f'combined_{filename}'), bbox_inches='tight', pad_inches=0)
     plt.close()
 
-def test(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm):
+def test_compare(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm):
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
@@ -127,15 +127,15 @@ def test(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm):
 
     print(f"Combined images saved in '{evaluate_dir}' folder.")
 
-if __name__ == '__main__':
-    try:
-        from models.UNet import UNet
-        from models.UNetMaxPool import UNetMaxPool
-        from models.UNetBatchNorm import UNetBatchNorm
+# if __name__ == '__main__':
+#     try:
+#         from models.UNet import UNet
+#         from models.UNetMaxPool import UNetMaxPool
+#         from models.UNetBatchNorm import UNetBatchNorm
 
-        test_dir = 'data_modified/RetinaVessel/test'
-        dataset_name = 'RetinaVessel'
+#         test_dir = 'data_modified/RetinaVessel/test'
+#         dataset_name = 'RetinaVessel'
 
-        test(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+#         test_compare(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm)
+#     except Exception as e:
+#         print(f"An error occurred: {e}")

@@ -15,10 +15,8 @@ from collections import defaultdict
 import time
 import copy
 from PIL import Image
-import matplotlib.pyplot as plt
 import numpy as np
-#from datasets.MultipleFeature import get_data_loaders
-from datasets.OneFeature import get_dataloaders
+
 
 def renormalize(tensor):
         minFrom= tensor.min()
@@ -28,28 +26,6 @@ def renormalize(tensor):
         return minTo + (maxTo - minTo) * ((tensor - minFrom) / (maxFrom - minFrom))
 
 def save_images_und_masks(inputs, label):
-    # tensor = torch.split(inputs)
-
-    # test = torch.squeeze(tensor[0], 0) 
-    # tsh = test.shape
-    # tensor2 = torch.split(test,1)
-
-    # sh = tensor2[0].shape
-    # test2 = torch.squeeze(tensor2[0], 0) 
-    # tsh2 = test2.shape
-
-    # tensorNeu = renormalize(test2)
-
-                    
-    # minFromNeu= tensorNeu.min()
-    # maxFromNeu= tensorNeu.max()
-
-    # a=tensorNeu.cpu().detach().numpy().astype(np.uint8)
-    # image = Image.fromarray(a)
-
-    # # Bild speichern
-    # image.save('test_trainloop/images/a.png')
-
     # Verarbeite das Eingabebild
     first_image = inputs[0]  # Das erste Bild im Batch
     first_image_2d = first_image.permute(1, 2, 0)  # Ändert die Dimensionen von [3, 192, 192] zu [192, 192, 3]
@@ -75,7 +51,6 @@ def save_images_und_masks(inputs, label):
         mask_array = (mask_array1 * 255).astype(np.uint8)  # Konvertiere zum uint8 Format
         mask_image = Image.fromarray(mask_array, mode='L')  # Mode 'L' für Graustufenbilder
         mask_image.save(f'test_trainloop/masks/mask_{i}.png')
-
 
 
 def dice_loss(pred, target, smooth=1.):
@@ -143,15 +118,6 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
-                testInputs = inputs.data.cpu().numpy()
-                testLabels = labels.data.cpu().numpy()
-
-                testInputs2 = testInputs[0][0]
-                testLabels2 = testLabels[0][0]
-                test = testInputs2.max()
-                test1 = testLabels2.max()
-                
-                
                 # # Debugging-Ausgaben
                 # print(f"Inputs shape: {inputs.shape}, dtype: {inputs.dtype}")
                 # print(f"Labels shape: {labels.shape}, dtype: {labels.dtype}")
@@ -200,8 +166,7 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
     model.load_state_dict(best_model_wts)
     return model
 
-def run(UNet,train_dir,dataset_name):
-    dataloader,_ = get_dataloaders(train_dir, dataset_name)
+def run(UNet,dataloader,dataset_name,save_name):
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -211,34 +176,30 @@ def run(UNet,train_dir,dataset_name):
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
+    start = time.time()
     model = train_model(model,dataloader, optimizer_ft, exp_lr_scheduler, num_epochs=30)
+    end = time.time()
+
+    # Verstrichene Zeit in Sekunden
+    elapsed_time_s = end - start
+    elapsed_time_min = elapsed_time_s / 60
+
+    print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
+    print("\n")
 
     results_dir = os.path.join('train/results',dataset_name)
+    save_dir = f"{results_dir}/{save_name}.pth"
+
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), f"{results_dir}/test_train.pth")
-    print(f"Model saved to {results_dir}/test_train.pth")
+    torch.save(model.state_dict(), save_dir)
+    print(f"Model saved to {save_dir}")
+    
 
-if __name__ == '__main__':
-     try:
-        from models.UNet import UNet
-        #from models.UNetBatchNorm import UNetBatchNorm
-        #from models.UNetMaxPool import UNetMaxPool
-
-        train_dir= 'data_modified/RetinaVessel/train'
-        dataset_name = 'RetinaVessel'
-
-        start = time.time()
-        run(UNet,train_dir,dataset_name)
-        end = time.time()
-
-        # Verstrichene Zeit in Sekunden
-        elapsed_time_s = end - start
-        elapsed_time_min = elapsed_time_s / 60
-
-        print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
+# if __name__ == '__main__':
+#      try:
         
-     except Exception as e:
-        print(f"An error occurred: {e}")
+#      except Exception as e:
+#         print(f"An error occurred: {e}")
 
 ############
 # Geometry_dataset

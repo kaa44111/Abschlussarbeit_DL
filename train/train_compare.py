@@ -16,7 +16,6 @@ import time
 from collections import defaultdict
 import matplotlib.pyplot as plt
 
-from datasets.OneFeature import get_dataloaders
 from models.UNetBatchNorm import UNetBatchNorm
 from models.UNet import UNet
 from models.UNetMaxPool import UNetMaxPool
@@ -145,12 +144,12 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
     model.load_state_dict(best_model_wts)
     return model, history, time_elapsed_min
 
-def run(train_dir,dataset_name, num_class, batch_size):
-    #root_dir = 'data_modified/RetinaVessel/train'
+def run_compare(dataloaders,dataset_name, num_class=None):
+    if num_class is None:
+        num_class=1
+
     compare_results_dir = os.path.join('train/results/compare_results',dataset_name)
     os.makedirs(compare_results_dir, exist_ok=True)
-
-    dataloaders, _ = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name,batch_size=batch_size)
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -221,48 +220,13 @@ def run(train_dir,dataset_name, num_class, batch_size):
     print("\n")
 
     
-if __name__ == '__main__':
-    try:
-        train_dir = 'data_modified/RetinaVessel/train'
-        dataset_name = 'RetinaVessel'
-        batch_size = 15
-        num_class = 1
-        run(train_dir,dataset_name, num_class, batch_size)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-
-# UNet Best val loss: 0.628031
-# UNetMaxPool Best val loss: 0.633133
-# UNetBatchNorm Best val loss: 0.467543
-
-
-# UNet training time: 4m 18s
-# UNetMaxPool training time: 1m 12s
-# UNetBatchNorm training time: 20m 8s
-
-
-# UNet inference time: 0.0410 seconds
-# UNetMaxPool inference time: 0.0428 seconds
-# UNetBatchNorm inference time: 0.0566 seconds
-
-
-# UNet parameters: 31031745
-# UNetMaxPool parameters: 31031745
-# UNetBatchNorm parameters: 31043521
-
-#_________________________________
-
-# UNet training time: 3.34 min
-# UNetMaxPool training time: 0.99 min
-# UNetBatchNorm training time: 19.07 min
-
-
-# UNet inference time: 0.0181 seconds
-# UNetMaxPool inference time: 0.0266 seconds
-# UNetBatchNorm inference time: 0.0298 seconds
-
-
-# UNet parameters: 31031745
-# UNetMaxPool parameters: 31031745
-# UNetBatchNorm parameters: 31043521
+# if __name__ == '__main__':
+#     try:
+#         train_dir = 'data_modified/RetinaVessel/train'
+#         dataset_name = 'RetinaVessel'
+#         batch_size = 15
+#         num_class = 1
+#         dataloader,_ = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name,batch_size=batch_size)
+#         run_compare(dataloader,dataset_name)
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
