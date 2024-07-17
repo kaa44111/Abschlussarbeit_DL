@@ -13,10 +13,10 @@ from torchvision.transforms import v2
 import torch.nn.functional as F
 import seaborn as sns
 import matplotlib.pyplot as plt
-from models.UNet import UNet
-from models.UNetBatchNorm import UNetBatchNorm
-from utils.data_utils import compute_mean_std
 import matplotlib
+
+from utils.data_utils import compute_mean_std
+
 matplotlib.use('TkAgg')  # Backend auf TkAgg umstellen
 
 
@@ -82,7 +82,7 @@ def show_predictions(images, preds, idx):
     plt.show()
 
 
-def test(UNet,trained_path):
+def test(UNet,test_dir,trained_path):
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
@@ -99,7 +99,7 @@ def test(UNet,trained_path):
         #v2.Normalize(mean=mean, std=std)
     ])
 
-    test_dataset = ImageOnlyDataset('data_modified/RetinaVessel/test', transform=transformations)
+    test_dataset = ImageOnlyDataset(test_dir, transform=transformations)
     test_loader = DataLoader(test_dataset, batch_size=3, shuffle=True, num_workers=0)
 
     images = next(iter(test_loader))
@@ -117,8 +117,13 @@ def test(UNet,trained_path):
 
 if __name__ == '__main__':
     try:
-        trained_path = 'test_RetinaVessel.pth'
-        test(UNet,trained_path) 
+        from models.UNet import UNet
+        #from models.UNetBatchNorm import UNetBatchNorm
+        #from models.UNetMaxPool import UNetMaxPool
+
+        test_dir = 'data_modified/RetinaVessel/test'
+        trained_path = 'train/results/RetinaVessel/test_train.pth'
+        test(UNet,test_dir,trained_path) 
                
         # trained_path = 'UNetBatchNorm_RetinaVessel.pth'
         # test(UNetBatchNorm,trained_path)
