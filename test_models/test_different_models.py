@@ -45,12 +45,31 @@ class ImageOnlyDataset(Dataset):
             print(f"Error loading data at index {idx}: {e}")
             return None
 
-def save_heatmap(pred, filename, save_dir):
-    plt.figure(figsize=(10, 10))
-    sns.heatmap(pred, cmap='viridis')
-    plt.axis('off')
+def save_combined_image(image, pred1, pred2, pred3, filename, save_dir):
+    fig, axs = plt.subplots(1, 4, figsize=(20, 5))
+    
+    # Original image
+    axs[0].imshow(image.permute(1, 2, 0).cpu().numpy())
+    axs[0].set_title('Original Image')
+    axs[0].axis('off')
+    
+    # Prediction heatmap UNet
+    sns.heatmap(pred1, cmap='viridis', ax=axs[1], cbar=False)
+    axs[1].set_title('UNet')
+    axs[1].axis('off')
+    
+    # Prediction heatmap UNetMaxPool
+    sns.heatmap(pred2, cmap='viridis', ax=axs[2], cbar=False)
+    axs[2].set_title('UNetMaxPool')
+    axs[2].axis('off')
+    
+    # Prediction heatmap UNetBatchNorm
+    sns.heatmap(pred3, cmap='viridis', ax=axs[3], cbar=False)
+    axs[3].set_title('UNetBatchNorm')
+    axs[3].axis('off')
+    
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, f'heatmap_{filename}'), bbox_inches='tight', pad_inches=0)
+    plt.savefig(os.path.join(save_dir, f'combined_{filename}'), bbox_inches='tight', pad_inches=0)
     plt.close()
 
 def test(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm):
@@ -61,11 +80,11 @@ def test(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm):
     model2 = UNetMaxPool(num_class).to(device)  # Model without MaxPool
     model3 = UNetBatchNorm(num_class).to(device)  # Model with Batch Normalization
     
-    compare_results =os.path.join('train/results/compare_results',dataset_name)
+    compare_results = os.path.join('train/results/compare_results', dataset_name)
     model1.load_state_dict(torch.load(f"{compare_results}/UNet.pth", map_location=device))
-    model2.load_state_dict(torch.load(f"{compare_results}/UNetBatchNorm.pth", map_location=device))
-    model3.load_state_dict(torch.load(f"{compare_results}/UNetMaxPool.pth", map_location=device))
-    
+    model2.load_state_dict(torch.load(f"{compare_results}/UNetMaxPool.pth", map_location=device))
+    model3.load_state_dict(torch.load(f"{compare_results}/UNetBatchNorm.pth", map_location=device))
+
     model1.eval()
     model2.eval()
     model3.eval()
@@ -79,14 +98,13 @@ def test(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm):
     test_dataset = ImageOnlyDataset(test_dir, transform=transformations)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
     
-    evaluate_dir = os.path.join('test_models/evaluate',dataset_name)
-    # Create directories for saving heatmaps
-    os.makedirs(f'{evaluate_dir}/heatmaps_UNet', exist_ok=True)
-    os.makedirs(f'{evaluate_dir}/heatmaps_UNetMaxPool', exist_ok=True)
-    os.makedirs(f'{evaluate_dir}/heatmaps_UNetBatchNorm', exist_ok=True)
+    evaluate_dir = os.path.join('test_models/evaluate', dataset_name)
+    os.makedirs(evaluate_dir, exist_ok=True)
 
     with torch.no_grad():
-        for images, filenames in test_loader:
+        for idx, (images, filenames) in enumerate(test_loader):
+            if idx >= 4:  # Limit to 4 examples
+                break
             images = images.to(device)
 
             # Predictions for UNet
@@ -104,12 +122,10 @@ def test(test_dir, dataset_name, UNet, UNetMaxPool, UNetBatchNorm):
             pred3 = F.sigmoid(pred3)
             pred3 = pred3.squeeze().cpu().numpy()
 
-            # Save heatmaps
-            save_heatmap(pred1, filenames[0], 'test_models/evaluate/heatmaps_UNet')
-            save_heatmap(pred2, filenames[0], 'test_models/evaluate/heatmaps_UNetMaxPool')
-            save_heatmap(pred3, filenames[0], 'test_models/evaluate/heatmaps_UNetBatchNorm')
+            # Save combined images
+            save_combined_image(images[0], pred1, pred2, pred3, filenames[0], evaluate_dir)
 
-    print("Heatmaps saved in 'heatmaps_UNet', 'heatmaps_UNetMaxPool', and 'heatmaps_UNetBatchNorm' folders.")
+    print(f"Combined images saved in '{evaluate_dir}' folder.")
 
 if __name__ == '__main__':
     try:
