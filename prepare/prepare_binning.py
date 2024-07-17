@@ -84,7 +84,7 @@ if __name__ == '__main__':
         scale_factor = 4  # Verkleinerungsfaktor (z.B. auf 1/4 der ursprünglichen Größe)
         root_dir = 'data/WireCheck'
 
-        #find_masks_to_image(root_dir,scale_factor)
+        find_masks_to_image(root_dir,scale_factor)
 
     except Exception as e:
         print(f"An error occurred: {e}")
