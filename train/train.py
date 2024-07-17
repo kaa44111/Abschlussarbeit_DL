@@ -14,11 +14,9 @@ import torch.utils
 from collections import defaultdict
 import time
 import copy
-from models.UNet import UNet
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
-#from datasets.OneFeature_dataset import get_dataloaders
 #from datasets.MultipleFeature import get_data_loaders
 from datasets.OneFeature import get_dataloaders
 
@@ -115,8 +113,8 @@ def print_metrics(metrics, epoch_samples, phase):
 
 
 
-def train_model(model, optimizer, scheduler, num_epochs=25):
-    dataloaders,_ = get_dataloaders('data_modified/RetinaVessel/train')
+def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
+    #dataloaders,_ = get_dataloaders('data_modified/RetinaVessel/train')
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     best_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 1e10
@@ -202,8 +200,8 @@ def train_model(model, optimizer, scheduler, num_epochs=25):
     model.load_state_dict(best_model_wts)
     return model
 
-def run(UNet):
-    
+def run(UNet,train_dir,dataset_name):
+    dataloader,_ = get_dataloaders(train_dir, dataset_name)
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -213,16 +211,24 @@ def run(UNet):
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, num_epochs=30)
+    model = train_model(model,dataloader, optimizer_ft, exp_lr_scheduler, num_epochs=30)
 
+    results_dir = os.path.join('train/results',dataset_name)
     # Speichern des trainierten Modells
-    torch.save(model.state_dict(), 'test_RetinaVessel.pth')
-    print("Model saved to test_RetinaVessel.pth")
+    torch.save(model.state_dict(), f"{results_dir}/test_train.pth")
+    print(f"Model saved to {results_dir}/test_train.pth")
 
 if __name__ == '__main__':
      try:
+        from models.UNet import UNet
+        #from models.UNetBatchNorm import UNetBatchNorm
+        #from models.UNetMaxPool import UNetMaxPool
+
+        train_dir= 'data_modified/RetinaVessel/train'
+        dataset_name = 'RetinaVessel'
+
         start = time.time()
-        run(UNet)
+        run(UNet,train_dir,dataset_name)
         end = time.time()
 
         # Verstrichene Zeit in Sekunden

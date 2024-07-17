@@ -140,12 +140,13 @@ def train_model(model, dataloaders, optimizer, scheduler, num_epochs=25):
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     print('Best val loss: {:4f}'.format(best_loss))
 
+    time_elapsed_min = time_elapsed / 60
     model.load_state_dict(best_model_wts)
-    return model, history, time_elapsed
+    return model, history, time_elapsed_min
 
-def run():
-    root_dir = 'data_modified/RetinaVessel/train'
-    dataloaders, _ = get_dataloaders(root_dir=root_dir)
+def run(train_dir,dataset_name):
+    #root_dir = 'data_modified/RetinaVessel/train'
+    dataloaders, _ = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name)
     
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -192,9 +193,9 @@ def run():
     inference_time1 = measure_inference_time(model1, sample_input)
     inference_time2 = measure_inference_time(model2, sample_input)
     inference_time3 = measure_inference_time(model3, sample_input)
-    print(f"UNet inference time: {inference_time1:.4f} seconds")
-    print(f"UNetMaxPool inference time: {inference_time2:.4f} seconds")
-    print(f"UNetBatchNorm inference time: {inference_time3:.4f} seconds")
+    print(f"UNet inference time: {inference_time1:.4f} min")
+    print(f"UNetMaxPool inference time: {inference_time2:.4f} min")
+    print(f"UNetBatchNorm inference time: {inference_time3:.4f} min")
     print("\n")
 
     # Anzahl der Parameter
@@ -207,14 +208,17 @@ def run():
     print("\n")
 
     # Speichern der trainierten Modelle
-    torch.save(model1.state_dict(), 'train/results/compare_results/UNet_RetinaVessel.pth')
-    torch.save(model2.state_dict(), 'train/results/compare_results/UNetMaxPool_RetinaVessel.pth')
-    torch.save(model3.state_dict(), 'train/results/compare_results/UNetBatchNorm_RetinaVessel.pth')
+    compare_results = os.path.join('train/results/compare_results',dataset_name)
+    torch.save(model1.state_dict(), f"{compare_results}/UNet.pth")
+    torch.save(model2.state_dict(), f"{compare_results}/UNetBatchNorm.pth")
+    torch.save(model3.state_dict(), f"{compare_results}/UNetBatchNorm.pth")
     print("Models saved to disk")
 
 if __name__ == '__main__':
     try:
-        run()
+        train_dir = 'data_modified/RetinaVessel/train'
+        dataset_name = 'RetinaVessel'
+        run(train_dir,dataset_name)
     except Exception as e:
         print(f"An error occurred: {e}")
 
