@@ -10,81 +10,98 @@ import torch
 from PIL import Image
 from torchvision.transforms import v2
 from torchvision import transforms
-from datasets.OneFeature import CustomDataset
+
+from utils.data_utils import find_image_and_mask_files_folder
 from utils.data_utils import show_normalized_images ,show_image_and_mask, compute_mean_std, compute_mean_std_from_dataset
 
-def downsample_image(input_path, output_path, scale_factor):
+def downsample_image(input_path,scale_factor=2):
     '''
-    Bilder werden kleiner skaliert
+    Downsample an image using Pillow's LANCZOS resampling.
     '''
-    # Bild laden
-    img = Image.open(input_path)
-    
-    # Neue Größe berechnen
-    new_size = (int(img.width / scale_factor), int(img.height / scale_factor))
-    
-    # Bildgröße ändern (runterskalieren)
-    downsampled_img = img.resize(new_size, Image.Resampling.LANCZOS)
-    
-    # Verkleinertes Bild speichern
-    downsampled_img.save(output_path)
+    if scale_factor is None:
+        scale_factor=2
 
-def find_masks_to_image(root_dir, scale_factor):
-    '''
-    Findet die passende Masken, die gleich wie die Bilder heißen, und führt ein Binning aus. 
-    Die verkleinerten Bilder & Masken werden in einem neuen Ordner gespeichert.
-    '''
-    image_folder = os.path.join(root_dir, 'train', 'grabs')
-    if not os.path.exists(image_folder):
-        image_folder = os.path.join(root_dir, 'grabs')
-
-    mask_folder = os.path.join(root_dir, 'train', 'masks')
-    if not os.path.exists(mask_folder):
-        mask_folder = os.path.join(root_dir,'masks')
+    with Image.open(input_path) as img:
+        # Check if the image has already been downsampled
+        if img.width < img.width / scale_factor or img.height < img.height / scale_factor:
+            print(f"{input_path} has already been downsampled.")
+            return img.copy()
         
-    # Liste aller Bilddateien
-    all_image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+        # Calculate new size
+        new_size = (int(img.width / scale_factor), int(img.height / scale_factor))
+        
+        # Resize the image
+        return img.resize(new_size, Image.Resampling.LANCZOS)
 
-    # Filtere die Bilddateien, für die auch Masken existieren
-    image_files = []
-    mask_files = []
+def save_downsample(downsampled_img,output_path):
+    """
+    Save the downsampled image, preserving the original format.
+    """
+    # Determine the file extension
+    _, ext = os.path.splitext(output_path)
 
-    for image_file in all_image_files:
-        base_name = os.path.splitext(image_file)[0]
-        mask_name = f"{base_name}.tif"
-        if os.path.exists(os.path.join(mask_folder, mask_name)):
-            image_files.append(image_file)
-            mask_files.append(mask_name)
+    if ext == '.bmp':
+        downsampled_img.save(output_path, format='BMP')
+    elif ext == '.tif' or ext == '.tiff':
+        downsampled_img.save(output_path, format='TIFF', compression='tiff_deflate')
+    else:
+        # For other formats, use the default saving method
+        downsampled_img.save(output_path)
 
-    print(f"Found {len(image_files)} images")
-    print(f"Found {len(mask_files)} masks")
+
+def prepare_binning(root_dir, scale_factor=2, dataset_name=None):
+    '''
+    Perform downsampling on images and masks in the given directory.
+    Default downsample : scale_factor = 2
+    '''
+    if dataset_name is None:
+        dataset_name = os.path.basename(root_dir.rstrip('/\\'))    
+
+    image_folder, mask_folder,image_files, mask_files=find_image_and_mask_files_folder(root_dir,dataset_name)
 
     # Ordnername aus image_folder extrahieren
-    folder_name = os.path.basename(root_dir.rstrip('/\\'))
-    image_modified = f"data_modified/{folder_name}/image"
-    mask_modified = f"data_modified/{folder_name}/mask"
+    folder_name = f"data_modified/{dataset_name}/downsampled"    
+    image_modified = f"{folder_name}/grabs"
+    mask_modified = f"{folder_name}/masks"    
+
+    # Überprüfen, ob der Ordner bereits existiert
+    if os.path.exists(folder_name):
+        print(f"Der Ordner {folder_name} existiert bereits. Überspringen des Downsamplings.")
+        return folder_name
+    
+    print(f"Found {len(image_files)} images and {len(mask_files)} masks")
 
     # Sicherstellen, dass die Ausgabeordner existieren
     os.makedirs(image_modified, exist_ok=True)
     os.makedirs(mask_modified, exist_ok=True)
 
-    for idx in range(len(image_files)):
-        img_name = os.path.join(image_folder, image_files[idx])
-        downsample_image(img_name, f"{image_modified}/{image_files[idx]}", scale_factor)
-        mask_name = os.path.join(mask_folder, mask_files[idx])
-        downsample_image(mask_name, f"{mask_modified}/{mask_files[idx]}", scale_factor)
+    for img_file, mask_file in zip(image_files, mask_files):
+        img_path = os.path.join(image_folder, img_file)
+        mask_path = os.path.join(mask_folder, mask_file)
+        output_img_path = os.path.join(image_modified, img_file)
+        output_mask_path = os.path.join(mask_modified, mask_file)
 
+        # Downsample and save image
+        downsampled_image = downsample_image(img_path, scale_factor)
+        save_downsample(downsampled_image, output_img_path)
+
+        # Downsample and save mask
+        downsampled_mask = downsample_image(mask_path, scale_factor)
+        save_downsample(downsampled_mask, output_mask_path)
+
+    return folder_name
 
 #_____________________________________________________
 ####### Try binning and saving Images####
 
-if __name__ == '__main__':
-    try: 
-        # Load images
-        scale_factor = 4  # Verkleinerungsfaktor (z.B. auf 1/4 der ursprünglichen Größe)
-        root_dir = 'data/WireCheck'
+# if __name__ == '__main__':
+#     try: 
+#         # Load images
+#         scale_factor = 4  # Verkleinerungsfaktor (z.B. auf 1/4 der ursprünglichen Größe)
+#         root_dir = 'data/WireCheck'
+#         dataset_name = 'WireCheck'
 
-        find_masks_to_image(root_dir,scale_factor)
+#         train_dir=downsample_image_and_mask(root_dir,dataset_name, scale_factor)
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
