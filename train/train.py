@@ -166,7 +166,7 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
     model.load_state_dict(best_model_wts)
     return model
 
-def run(UNet,dataloader,dataset_name,save_name):
+def run(UNet,dataloader,dataset_name,save_name=None):
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -186,6 +186,9 @@ def run(UNet,dataloader,dataset_name,save_name):
 
     print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
     print("\n")
+
+    if save_name is None:
+        save_name = 'test_1s'
 
     results_dir = os.path.join('train/results',dataset_name)
     save_dir = f"{results_dir}/{save_name}.pth"
