@@ -36,33 +36,31 @@ class CustomDataset(Dataset):
         self.mask_files = []
         
         for image_file in all_image_files:
-            base_name, ext = os.path.splitext(image_file)#[0]
+            base_name = os.path.splitext(image_file)[0]
 
            # Bestimme den Masken-Namen basierend auf dem dataset_name
             if dataset_name == "RetinaVessel":
                 mask_name = f"{base_name}.tiff"
-            elif dataset_name == "Wirecheck":
-                mask_name = f"{base_name}.tif"
             elif dataset_name == "Ölflecken":
                 mask_name = f"{base_name}_1.bmp"
             elif dataset_name == "circle_data":
                 mask_name = f"{base_name}1.png"
-            elif dataset_name is None:
-                mask_name = f"{base_name}{ext}"  # Gleicher Name und Format wie das Bild
             else:
-                raise ValueError(f"Unbekannter dataset_name: {dataset_name}")
+                mask_name = f"{base_name}.tif"  # Gleicher Name und Format wie das Bild
             
             if os.path.exists(os.path.join(self.mask_folder, mask_name)):
                 self.image_files.append(image_file)
                 self.mask_files.append(mask_name)
+            else :
+                raise ModuleNotFoundError
 
         # Begrenzen der Anzahl der Dateien, wenn count nicht None ist
         if self.count is not None:
             self.image_files = self.image_files[:self.count]
             self.mask_files = self.mask_files[:self.count]
 
-        # print(f"Found {len(self.image_files)} images")
-        # print(f"Found {len(self.mask_files)} masks")
+        print(f"Found {len(self.image_files)} images")
+        print(f"Found {len(self.mask_files)} masks")
 
     def __len__(self):
         return len(self.image_files)
@@ -92,8 +90,12 @@ class CustomDataset(Dataset):
             return None, None  # Return dummy values
         
 '''!!To Do move specific Transformations to __main__ in the train.py or test.py'''
-def get_dataloaders(root_dir,dataset_name, batch_size=None, transformations=None):
-
+def get_dataloaders(root_dir,dataset_name=None, batch_size=None, transformations=None, split_size = None):
+    '''
+    Default Transform: ToPureTensor(), ToDtype(torch.float32, scale=True)
+    Default batch_size : 15
+    Default split_size : 0.8
+    '''
     if transformations is None:
         transformations = v2.Compose([
             v2.ToPureTensor(),
@@ -102,9 +104,12 @@ def get_dataloaders(root_dir,dataset_name, batch_size=None, transformations=None
 
     custom_dataset = CustomDataset(root_dir=root_dir, dataset_name=dataset_name, transform=transformations)
 
+    if split_size is None:
+        split_size=0.8
+
     # Definieren Sie die Größen für das Training und die Validierung
     dataset_size = len(custom_dataset)
-    train_size = int(0.8 * dataset_size)
+    train_size = int(split_size * dataset_size)
 
     # Generieren Sie reproduzierbare Indizes für Training und Validierung
     indices = list(range(dataset_size))
@@ -117,9 +122,9 @@ def get_dataloaders(root_dir,dataset_name, batch_size=None, transformations=None
     train_dataset = Subset(custom_dataset, train_indices)
     val_dataset = Subset(custom_dataset, val_indices)
 
-    # # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
-    # print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
-    # print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
+    # Ausgabe der Anzahl der Bilder in Trainings- und Validierungsdatensätzen
+    print(f"Anzahl der Bilder im Trainingsdatensatz: {len(train_dataset)}")
+    print(f"Anzahl der Bilder im Validierungsdatensatz: {len(val_dataset)}")
 
     if batch_size is None:
         batch_size=15
