@@ -7,7 +7,43 @@ from torchvision import transforms
 from PIL import Image
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-#from sklearn.model_selection import train_test_split
+
+def find_image_and_mask_files_folder(root_dir, dataset_name=None):
+    image_folder = os.path.join(root_dir, 'train', 'grabs')
+    if not os.path.exists(image_folder):
+        image_folder = os.path.join(root_dir, 'grabs')
+
+    mask_folder = os.path.join(root_dir, 'train', 'masks')
+    if not os.path.exists(mask_folder):
+        mask_folder = os.path.join(root_dir, 'masks')
+    
+    if dataset_name is None:
+        dataset_name = os.path.basename(root_dir.rstrip('/\\'))
+
+    all_image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
+
+    image_files = []
+    mask_files = []
+
+    for image_file in all_image_files:
+        base_name = os.path.splitext(image_file)[0]
+
+        if dataset_name == "RetinaVessel":
+            mask_name = f"{base_name}.tiff"
+        elif dataset_name == "Ölflecken":
+            mask_name = f"{base_name}_1.bmp"
+        elif dataset_name == "circle_data":
+            mask_name = f"{base_name}1.png"
+        else:
+            mask_name = f"{base_name}.tif"
+
+        if os.path.exists(os.path.join(mask_folder, mask_name)):
+            image_files.append(image_file)
+            mask_files.append(mask_name)
+        else:
+            raise FileNotFoundError(f"Maske für Bild {image_file} nicht gefunden.")
+
+    return image_folder, mask_folder, image_files, mask_files
 
 def show_image_and_mask(image, mask):
     '''
