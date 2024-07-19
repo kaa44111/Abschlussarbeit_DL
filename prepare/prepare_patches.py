@@ -1,6 +1,14 @@
+import sys
 import os
+
+# Initialisierung des PYTHONPATH
+project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_path not in sys.path:
+    sys.path.append(project_path)
+
 from PIL import Image
 import numpy as np
+from utils.data_utils import find_image_and_mask_files_folder
 
 
 # def create_patches(image, patch_size):
@@ -25,6 +33,10 @@ def create_patches(image, patch_size):
     '''
     Teilt ein Bild in Patches auf. Randbehandlung : Der Rand wird einfach weggelassen
     '''
+    if patch_size is None:
+        patch_size= 200
+        print("Default if patch_size:200")
+
     width, height = image.size
     patches = []
     for i in range(0, width, patch_size):
@@ -43,47 +55,45 @@ def save_patches(patches, base_name, output_folder, prefix):
         os.makedirs(output_folder)
     
     for idx, patch in enumerate(patches):
-        patch_name = f"{base_name}_{prefix}{idx + 1}.tiff"
+        patch_name = f"{base_name}_{prefix}{idx + 1}.tif"
         patch.save(os.path.join(output_folder, patch_name))
 
-def process_images_and_masks(root_dir, patch_size):
+def prepare_patches(root_dir, patch_size = None, dataset_name=None):
     '''
     Teilt die Bilder und Masken in Patches auf und speichert sie.
     '''
-    image_folder = os.path.join(root_dir, 'train', 'grabs')
-    if not os.path.exists(image_folder):
-        image_folder = os.path.join(root_dir, 'grabs')
+    image_folder, mask_folder, image_files, mask_files = find_image_and_mask_files_folder(root_dir, dataset_name)
 
-    mask_folder = os.path.join(root_dir, 'train', 'masks')
-    if not os.path.exists(mask_folder):
-        mask_folder = os.path.join(root_dir,'masks')
+    if dataset_name is None:
+        dataset_name = os.path.basename(root_dir.rstrip('/\\'))
 
-    # Erstellen des neuen Verzeichnisses basierend auf root_dir
-    base_name = os.path.basename(root_dir)
-    output_image_folder = os.path.join('data_modified', base_name, 'train', 'grabs')
-    output_mask_folder = os.path.join('data_modified', base_name, 'train', 'masks')
+    # Ordnername aus image_folder extrahieren
+    folder_name = f"data_modified/{dataset_name}/patched"    
+    image_modified = f"{folder_name}/grabs"
+    mask_modified = f"{folder_name}/masks"
 
-    for image_name in os.listdir(image_folder):
-        if not image_name.endswith('.tif'):
-            continue
-        
-        base_name = os.path.splitext(image_name)[0]
-        image_path = os.path.join(image_folder, image_name)
-        mask_name = f"{base_name}_1.bmp"
-        mask_path = os.path.join(mask_folder, mask_name)
-        
-        if not os.path.exists(mask_path):
-            print(f"Maske für Bild {image_name} nicht gefunden. Überspringen.")
-            continue
-        
+    # Überprüfen, ob der Ordner bereits existiert
+    if os.path.exists(folder_name):
+        print(f"Der Ordner {folder_name} existiert bereits. Überspringen des Downsamplings.")
+        return folder_name
+
+    output_image_folder = os.path.join(image_modified)
+    output_mask_folder = os.path.join(mask_modified)
+
+    for image_file, mask_file in zip(image_files, mask_files):
+        image_path = os.path.join(image_folder, image_file)
+        mask_path = os.path.join(mask_folder, mask_file)
+
         image = Image.open(image_path).convert('RGB')
         mask = Image.open(mask_path).convert('L')
-        
+
         image_patches = create_patches(image, patch_size)
         mask_patches = create_patches(mask, patch_size)
-        
-        save_patches(image_patches, base_name, output_image_folder, 'patch')
-        save_patches(mask_patches, base_name, output_mask_folder, 'patch')
+
+        save_patches(image_patches, os.path.splitext(image_file)[0], output_image_folder, 'patch')
+        save_patches(mask_patches, os.path.splitext(mask_file)[0], output_mask_folder, 'patch')
+
+    return folder_name
 
 def process_test_images(root_dir, patch_size):
     '''
