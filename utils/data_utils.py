@@ -30,8 +30,10 @@ def find_image_and_mask_files_folder(root_dir, dataset_name=None):
     for image_file in all_image_files:
         base_name = os.path.splitext(image_file)[0]
 
-        if dataset_name == "RetinaVessel":
-            mask_name = f"{base_name}.tiff"
+        if dataset_name == "WireCheck":
+            mask_name = f"{base_name}.tif"
+        elif dataset_name == "RetinaVessel":
+            mask_name = f"{base_name}.tiff" 
         elif dataset_name == "Ölflecken":
             mask_name = f"{base_name}_1.bmp"
         elif dataset_name == "circle_data":
@@ -42,10 +44,15 @@ def find_image_and_mask_files_folder(root_dir, dataset_name=None):
         if os.path.exists(os.path.join(mask_folder, mask_name)):
             image_files.append(image_file)
             mask_files.append(mask_name)
-        else:
-            raise FileNotFoundError(f"Maske für Bild {image_file} nicht gefunden.")
+        # else:
+        #     raise FileNotFoundError(f"Maske für Bild {image_file} nicht gefunden.")
+        
+    print(f"Found {len(image_files)} images")
+    print(f"Found {len(mask_files)} masks")
 
     return image_folder, mask_folder, image_files, mask_files
+
+image_folder, mask_folder, image_files, mask_files = find_image_and_mask_files_folder("data/WireCheck","WireCheck")
 
 def show_image_and_mask(image, mask):
     '''
