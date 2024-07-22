@@ -7,6 +7,7 @@ if project_path not in sys.path:
     sys.path.append(project_path)
 
 from PIL import Image
+import numpy as np
 
 from utils.data_utils import find_image_and_mask_files_folder
 
@@ -34,6 +35,9 @@ def extract_patches(image, patch_size, use_padding):
 def downsample_image(img, scale_factor):
     new_size = (int(img.width / scale_factor), int(img.height / scale_factor))
     return img.resize(new_size, Image.Resampling.LANCZOS)
+
+def is_empty_mask(mask_patch):
+    return np.array(mask_patch).sum() == 0
 
 def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=None, use_padding=False):
     image_folder, mask_folder, image_files, mask_files = find_image_and_mask_files_folder(root_dir, dataset_name)
@@ -98,6 +102,9 @@ def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=No
                 mask_patches = extract_patches(mask, patch_size, use_padding)
 
                 for i, (img_patch, mask_patch) in enumerate(zip(img_patches, mask_patches)):
+                    if is_empty_mask(mask_patch):
+                        continue
+                    
                     img_name = f"{os.path.splitext(img_file)[0]}_patch{i+1}.tif"
                     mask_name = f"{os.path.splitext(img_file)[0]}_patch{i+1}.tif"
                     
