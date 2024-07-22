@@ -133,13 +133,13 @@ def downsample_image(input_path, output_path, scale_factor):
     '''
     # Bild laden
     img = Image.open(input_path)
-    
+
     # Neue Größe berechnen
     new_size = (int(img.width / scale_factor), int(img.height / scale_factor))
-    
+
     # Bildgröße ändern (runterskalieren)
     downsampled_img = img.resize(new_size, Image.Resampling.LANCZOS)
-    
+
     # Verkleinertes Bild speichern
     downsampled_img.save(output_path)
 
@@ -155,7 +155,7 @@ def find_masks_to_image(root_dir, scale_factor):
     mask_folder = os.path.join(root_dir, 'train', 'masks')
     if not os.path.exists(mask_folder):
         mask_folder = os.path.join(root_dir,'masks')
-        
+
     # Liste aller Bilddateien
     all_image_files = sorted(os.listdir(image_folder), key=lambda x: int(''.join(filter(str.isdigit, x))))
 
@@ -175,8 +175,8 @@ def find_masks_to_image(root_dir, scale_factor):
 
     # Ordnername aus image_folder extrahieren
     folder_name = os.path.basename(root_dir.rstrip('/\\'))
-    image_modified = f"data_modified/{folder_name}/image"
-    mask_modified = f"data_modified/{folder_name}/mask"
+    image_modified = f"data_modified/{folder_name}/test/image"
+    mask_modified = f"data_modified/{folder_name}/test/mask"
 
     # Sicherstellen, dass die Ausgabeordner existieren
     os.makedirs(image_modified, exist_ok=True)
@@ -188,7 +188,19 @@ def find_masks_to_image(root_dir, scale_factor):
         mask_name = os.path.join(mask_folder, mask_files[idx])
         downsample_image(mask_name, f"{mask_modified}/{mask_files[idx]}", scale_factor)
 
-find_masks_to_image("data/Dichtflächen",scale_factor=5)
+#_____________________________________________________
+####### Try binning and saving Images####
+
+if __name__ == '__main__':
+    try: 
+        # Load images
+        scale_factor = 4  # Verkleinerungsfaktor (z.B. auf 1/4 der ursprünglichen Größe)
+        root_dir = 'data/WireCheck'
+
+        find_masks_to_image(root_dir,scale_factor)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
 #__________________________________________________________________________________________________
 # def create_patches(image, patch_size):
 #     '''
