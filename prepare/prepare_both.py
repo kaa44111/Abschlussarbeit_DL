@@ -21,14 +21,14 @@ def extract_patches(image, patch_size, use_padding):
     for i in range(0, width, patch_size):
         for j in range(0, height, patch_size):
             box = (i, j, i + patch_size, j + patch_size)
-            if box[2] <= width and box[3] <= height:
-                patch = image.crop(box)
-            if use_padding and (box[2] - box[0] < patch_size or box[3] - box[1] < patch_size):
-                padded_patch = Image.new(image.mode, (patch_size, patch_size))
-                padded_patch.paste(patch, (0, 0))
-                patches.append(padded_patch)
-            else:
+            if use_padding:
+                patch = Image.new(image.mode, (patch_size, patch_size))
+                patch.paste(image.crop(box), (0, 0))
                 patches.append(patch)
+            else:
+                if box[2] <= width and box[3] <= height:
+                    patch = image.crop(box)
+                    patches.append(patch)
     return patches
 
 def downsample_image(img, scale_factor):
