@@ -9,6 +9,8 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 
 def find_image_and_mask_files_folder(root_dir, dataset_name=None):
+    '''retruns image_folder, mask_folder, image_files, mask_files'''
+
     image_folder = os.path.join(root_dir, 'train', 'grabs')
     if not os.path.exists(image_folder):
         image_folder = os.path.join(root_dir, 'grabs')
