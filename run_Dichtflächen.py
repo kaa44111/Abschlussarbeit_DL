@@ -14,9 +14,8 @@ from torchvision.transforms import v2
 from datasets.OneFeature import get_dataloaders
 
 #Prepare
-from prepare.prepare_binning import prepare_binning
-from prepare.prepare_patches import prepare_patches
 from prepare.prepare_both import process_images
+from prepare.bounding_box import process_and_save_cropped_images
 
 #Train
 from train.train import run
@@ -43,36 +42,34 @@ if __name__ == '__main__':
         '''
         root_dir= 'data/Dichtflächen'
         dataset_name = 'Dichtflächen'
+        #save_name = 'test'
 
         #Prepare Dataset (downsampe, batch, both)
         '''
         Default downsample : scale_factor = 2
         Default patch:  patch_size= 200
         '''
-        #train_dir = prepare_binning(root_dir,5,dataset_name)
-        #train_dir = prepare_patches(root_dir=root_dir,dataset_name=dataset_name)
-        train_dir = process_images(root_dir,dataset_name,2,200)
+        train_dir = process_images(root_dir,dataset_name,downsample_factor=3,patch_size=192)
+
         #Get Dataloader
         '''
         Default Transform: ToPureTensor(), ToDtype(torch.float32, scale=True)
         Default batch_size : 15
         Default split_size : 0.8
         '''
-        dataloader,_ = get_dataloaders(root_dir=train_dir)
-        batch = next(iter(dataloader['train']))
-        images,masks = batch
-        print(images.shape)
-        print(masks.shape)
-        print(f"First image min: {images[0].min()}, max: {images[0].max()}")
-        print(f"First mask min: {masks[0].min()}, max: {masks[0].max()}") 
-
-        
+        dataloader,_ = get_dataloaders(root_dir=train_dir,batch_size=4)
+      #   batch = next(iter(dataloader['train']))
+      #   images,masks = batch
+      #   print(images.shape)
+      #   print(masks.shape)
+      #   print(f"First image min: {images[0].min()}, max: {images[0].max()}")
+      #   print(f"First mask min: {masks[0].min()}, max: {masks[0].max()}") 
 
         #_____________________________________________________________
 
-        # ####Training für ein Modell Starten
-        # print("Train Model with Dichtflächen Dataset:")
-        # run(UNet,dataloader,dataset_name,save_name)
+        ####Training für ein Modell Starten
+        print("Train Model with Dichtflächen Dataset:")
+        run(UNet,dataloader,dataset_name)
 
         # results_dir = os.path.join('train/results',dataset_name)
         # trained_model = f"{results_dir}/{save_name}.pth"
