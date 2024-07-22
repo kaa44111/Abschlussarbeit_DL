@@ -15,37 +15,31 @@ import numpy as np
 
 def extract_patches(image, patch_size, use_padding=False):
     width, height = image.size
-    if use_padding:
-        patches = []
-        for i in range(0, width, patch_size):
-            for j in range(0, height, patch_size):
-                box = (i, j, min(i + patch_size, width), min(j + patch_size, height))
-                patch = image.crop(box)
-                
-                # Create a new patch with the desired size and paste the cropped patch
-                padded_patch = Image.new('RGB' if image.mode == 'RGB' else 'L', (patch_size, patch_size))
+    patches = []
+    for i in range(0, width, patch_size):
+        for j in range(0, height, patch_size):
+            box = (i, j, min(i + patch_size, width), min(j + patch_size, height))
+            patch = image.crop(box)
+            if use_padding and (box[2] - box[0] < patch_size or box[3] - box[1] < patch_size):
+                padded_patch = Image.new(image.mode, (patch_size, patch_size))
                 padded_patch.paste(patch, (0, 0))
                 patches.append(padded_patch)
-    else:
-        patches = []
-        for i in range(0, width, patch_size):
-            for j in range(0, height, patch_size):
-                box = (i, j, i + patch_size, j + patch_size)
-                if box[2] <= width and box[3] <= height:
-                    patch = image.crop(box)
-                    patches.append(patch)
-
+            else:
+                patches.append(patch)
     return patches
 
-def downsample_image(img,scale_factor):
-    # Calculate new size
+def downsample_image(img, scale_factor):
     new_size = (int(img.width / scale_factor), int(img.height / scale_factor))
-        
-    # Resize the image
     return img.resize(new_size, Image.Resampling.LANCZOS)
 
 def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=None, use_padding=False):
     image_folder, mask_folder, image_files, mask_files = find_image_and_mask_files_folder(root_dir, dataset_name)
+    
+    # Debugging-Ausgaben hinzufügen
+    print(f"Image Folder: {image_folder}")
+    print(f"Mask Folder: {mask_folder}")
+    print(f"Image Files: {image_files}")
+    print(f"Mask Files: {mask_files}")
     
     output_base = f"data_modified/{dataset_name}"
     if downsample_factor and patch_size:
@@ -56,17 +50,14 @@ def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=No
         output_dir = f"{output_base}/patched"
     else:
         raise ValueError("Entweder downsample_factor oder patch_size muss angegeben werden.")
-
+    
     if os.path.exists(output_dir):
         print(f"Verzeichnis {output_dir} existiert bereits. Keine weiteren Operationen werden durchgeführt.")
         return output_dir
+    
+    image_modified = os.path.join(output_dir, "grabs")
+    mask_modified = os.path.join(output_dir, "masks")
 
-    #os.makedirs(output_dir, exist_ok=True)
-
-    image_modified = f"{output_dir}/grabs"
-    mask_modified = f"{output_dir}/masks"
-
-    # Sicherstellen, dass die Ausgabeordner existieren
     os.makedirs(image_modified, exist_ok=True)
     os.makedirs(mask_modified, exist_ok=True)
 
@@ -74,34 +65,140 @@ def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=No
         img_path = os.path.join(image_folder, img_file)
         mask_path = os.path.join(mask_folder, mask_file)
         
-        img = Image.open(img_path).convert('RGB')
-        mask = Image.open(mask_path).convert('L')
+        # Überprüfen, ob die Bild- und Maskenpfade existieren
+        if not os.path.exists(img_path):
+            print(f"Bilddatei nicht gefunden: {img_path}")
+            continue
+        if not os.path.exists(mask_path):
+            print(f"Maskendatei nicht gefunden: {mask_path}")
+            continue
 
-        if downsample_factor is not None:
-            img = downsample_image(img,downsample_factor)
-            mask = downsample_image(mask,downsample_factor)
+        try:
+            img = Image.open(img_path).convert('RGB')
+            mask = Image.open(mask_path).convert('L')
 
-        if patch_size:
-            img_patches = extract_patches(img, patch_size)
-            mask_patches = extract_patches(mask, patch_size)
+            # Debugging-Ausgaben
+            print(f"Verarbeite Bild: {img_path}")
+            print(f"Bildgröße vor Downsampling: {img.size}")
+            print(f"Maskengröße vor Downsampling: {mask.size}")
 
-            for i, (img_patch, mask_patch) in enumerate(zip(img_patches, mask_patches)):
-                img_name = f"{os.path.splitext(img_file)[0]}_patch{i+1}.tif"
-                mask_name = f"{os.path.splitext(mask_file)[0]}_patch{i+1}.tif"
+            if downsample_factor is not None:
+                img = downsample_image(img, downsample_factor)
+                mask = downsample_image(mask, downsample_factor)
+
+                # Debugging-Ausgaben
+                print(f"Bildgröße nach Downsampling: {img.size}")
+                print(f"Maskengröße nach Downsampling: {mask.size}")
+
+            if patch_size:
+                img_patches = extract_patches(img, patch_size, use_padding)
+                mask_patches = extract_patches(mask, patch_size, use_padding)
+
+                for i, (img_patch, mask_patch) in enumerate(zip(img_patches, mask_patches)):
+                    img_name = f"{os.path.splitext(img_file)[0]}_patch{i+1}.tif"
+                    mask_name = f"{os.path.splitext(mask_file)[0]}_patch{i+1}.tif"
+                    
+                    output_img_path = os.path.join(image_modified, img_name)
+                    output_mask_path = os.path.join(mask_modified, mask_name)
+                    
+                    # Debugging-Ausgaben
+                    print(f"Speichern des Bildes: {output_img_path}")
+                    print(f"Speichern der Maske: {output_mask_path}")
+                    
+                    img_patch.save(output_img_path)
+                    mask_patch.save(output_mask_path)
+            else:
+                output_img_path = os.path.join(image_modified, img_file)
+                output_mask_path = os.path.join(mask_modified, mask_file)
                 
-                output_img_path = os.path.join(image_modified,img_name)
-                output_mask_path = os.path.join(mask_modified,mask_name)
-                img_patch.save(output_img_path)
-                mask_patch.save(output_mask_path)
-        else:
-            output_img_path = os.path.join(image_modified, img_file)
-            output_mask_path = os.path.join(mask_modified, mask_file)
-            
-            img.save(output_img_path)
-            mask.save(output_mask_path)
+                # Debugging-Ausgaben
+                print(f"Speichern des Bildes: {output_img_path}")
+                print(f"Speichern der Maske: {output_mask_path}")
+                
+                img.save(output_img_path)
+                mask.save(output_mask_path)
+        except Exception as e:
+            print(f"Fehler beim Verarbeiten der Datei {img_file} oder {mask_file}: {e}")
 
     print(f"Verarbeitung abgeschlossen. Ergebnisse gespeichert in: {output_dir}")
     return output_dir
+
+# Beispielaufruf der Funktion
+# process_images("path_to_root_dir", "dataset_name", downsample_factor=2, patch_size=256, use_padding=True)
+
+root_dir= 'data_modified/RetinaVessel'
+dataset_name = 'RetinaVessel'
+
+#Prepare Dataset (downsampe, batch, both)
+'''
+Default downsample : scale_factor = 2
+Default patch:  patch_size= 200
+'''
+train_dir = process_images(root_dir,dataset_name,patch_size=256,use_padding=True)
+
+#_______________________________________________________________
+# def downsample_image(img, scale_factor, min_size=(32, 32)):
+#     new_size = (max(int(img.width / scale_factor), min_size[0]), 
+#                 max(int(img.height / scale_factor), min_size[1]))
+#     return img.resize(new_size, Image.Resampling.LANCZOS)
+
+# def process_images_for_binning(root_dir, dataset_name, downsample_factor):
+#     # Verzeichnisse für Eingabebilder und Ausgabebilder
+#     image_folder = os.path.join(root_dir, dataset_name, 'grabs')
+#     mask_folder = os.path.join(root_dir, dataset_name, 'masks')
+    
+#     output_image_folder = os.path.join('data_modified', dataset_name, 'downsampled', 'grabs')
+#     output_mask_folder = os.path.join('data_modified', dataset_name, 'downsampled', 'masks')
+    
+#     # Erstellen der Ausgabeordner, falls sie nicht existieren
+#     os.makedirs(output_image_folder, exist_ok=True)
+#     os.makedirs(output_mask_folder, exist_ok=True)
+    
+#     # Liste der Bilddateien im Verzeichnis
+#     image_files = [f for f in os.listdir(image_folder) if f.endswith(('.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff'))]
+#     mask_files = [f for f in os.listdir(mask_folder) if f.endswith(('.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff'))]
+    
+#     for img_file, mask_file in zip(image_files, mask_files):
+#         img_path = os.path.join(image_folder, img_file)
+#         mask_path = os.path.join(mask_folder, mask_file)
+        
+#         # Überprüfen, ob die Bild- und Maskenpfade existieren
+#         if not os.path.exists(img_path):
+#             print(f"Bilddatei nicht gefunden: {img_path}")
+#             continue
+#         if not os.path.exists(mask_path):
+#             print(f"Maskendatei nicht gefunden: {mask_path}")
+#             continue
+
+#         try:
+#             img = Image.open(img_path)
+#             mask = Image.open(mask_path)
+
+#             # Debugging-Ausgaben
+#             print(f"Verarbeite Bild: {img_path}")
+#             print(f"Bildgröße vor Downsampling: {img.size}")
+#             print(f"Maskengröße vor Downsampling: {mask.size}")
+
+#             img = downsample_image(img, downsample_factor)
+#             output_img_path = os.path.join(output_image_folder, img_file)
+#              # Debugging-Ausgaben
+#             print(f"Speichern des Bildes: {output_img_path}")
+#             print(f"Bildgröße nach Downsampling: {img.size}")
+#             img.save(output_img_path)
+
+#             mask = downsample_image(mask, downsample_factor)
+#             print(f"Maskengröße nach Downsampling: {mask.size}")
+#             output_mask_path = os.path.join(output_mask_folder, mask_file)
+#             print(f"Speichern der Maske: {output_mask_path}")
+#             mask.save(output_mask_path)
+
+#         except Exception as e:
+#             print(f"Fehler beim Verarbeiten der Datei {img_file} oder {mask_file}: {e}")
+
+#     print(f"Verarbeitung abgeschlossen. Ergebnisse gespeichert in: {os.path.join('data_modified', dataset_name, 'downsampled')}")
+#     return os.path.join('data_modified', dataset_name, 'downsampled')
+
+# process_images_for_binning("data", "Dichtflächen", downsample_factor=2)
 
 # def prepare_both(root_dir, scale_factor=None, patch_size=None, dataset_name=None):
 #     '''
