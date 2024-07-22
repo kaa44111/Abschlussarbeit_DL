@@ -33,7 +33,7 @@ def find_image_and_mask_files_folder(root_dir, dataset_name=None):
         if dataset_name == "WireCheck":
             mask_name = f"{base_name}.tif"
         elif dataset_name == "RetinaVessel":
-            mask_name = f"{base_name}.tiff" 
+            mask_name = f"{base_name}_1.bmp" 
         elif dataset_name == "Ölflecken":
             mask_name = f"{base_name}_1.bmp"
         elif dataset_name == "circle_data":
@@ -52,7 +52,7 @@ def find_image_and_mask_files_folder(root_dir, dataset_name=None):
 
     return image_folder, mask_folder, image_files, mask_files
 
-image_folder, mask_folder, image_files, mask_files = find_image_and_mask_files_folder("data/WireCheck","WireCheck")
+#image_folder, mask_folder, image_files, mask_files = find_image_and_mask_files_folder("data/RetinaVessel","RetinaVessel")
 
 def show_image_and_mask(image, mask):
     '''
