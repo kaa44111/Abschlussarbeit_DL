@@ -13,20 +13,14 @@ from torchvision.transforms import v2
 from torch.utils.data import Dataset, DataLoader, Subset, ConcatDataset
 from collections import defaultdict
 import matplotlib.pyplot as plt
-import copy
-import time
+
 from train.train import run
 from test_models.test_model import test
 import numpy as np
 
 import torch
-import torch.optim as optim
-from torch.optim import lr_scheduler
-import torch.nn.functional as F
+
 import torch.utils
-from collections import defaultdict
-import time
-import copy
 from PIL import Image
 import numpy as np
 from utils.data_utils import show_image_and_mask
@@ -168,7 +162,7 @@ def get_dataloaders(root_dir,dataset_name=None, batch_size=25, transformations=N
 
 if __name__ == '__main__':
      try:
-        from models.UNet import UNet
+        from models.UNetBatchNorm import UNetBatchNorm
     
         train_dir = 'data_modified/Dichtflächen/patched'
         dataset_name = 'Dichtflächen'
@@ -188,23 +182,23 @@ if __name__ == '__main__':
         #     show_image_and_mask(images[i],masks[i])  
 
     #     #_____________________________________________________________
-        save_name = 'test_Equalize'
+        save_name = 'test_UNetBatchNorm'
 
         ####Training für ein Modell Starten
         print("Train Model with Dichtflächen Dataset:")
-        #run(UNet, dataloader, dataset_name,save_name)
+        run(UNetBatchNorm, dataloader, dataset_name,save_name)
 
         trans = v2.Compose([
-            v2.RandomEqualize(p=1.0),
+            #v2.RandomEqualize(p=1.0),
             v2.ToPureTensor(),
             v2.ToDtype(torch.float32, scale=True),
         ])
         
     #     results_dir = os.path.join('train/results',dataset_name)
-        trained_model = 'train/results/Dichtflächen/test_Equalize.pth'
+        trained_model = 'train/results/Dichtflächen/test_UNetBatchNorm.pth'
         
         
-        test(UNet=UNet,test_dir=train_dir,transformations = trans,test_trained_model=trained_model)
+        test(UNet=UNetBatchNorm,test_dir=train_dir,transformations = trans,test_trained_model=trained_model)
 
     #     # #______________________________________________________________
 
