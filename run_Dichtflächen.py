@@ -9,6 +9,7 @@ if project_path not in sys.path:
 import torch
 import torch.utils
 from torchvision.transforms import v2
+from torchvision import transforms
 
 #from datasets.MultipleFeature import get_data_loaders
 from datasets.OneFeature import get_dataloaders
@@ -22,7 +23,7 @@ from train.train import run
 from train.train_compare import run_compare
 
 #Test
-from test_models.ImageOnly_test import test
+from test_models.test_model import test
 from test_models.test_different_models import test_compare
 
 #Falls man die Bilder Normalisiern will
@@ -57,9 +58,29 @@ if __name__ == '__main__':
         Default batch_size : 15
         Default split_size : 0.8
         '''
-        dataloader,_ = get_dataloaders(root_dir=train_dir,batch_size=4)
+        trans = v2.Compose([
+            #v2.RandomEqualize(p=1.0),
+            v2.ToPureTensor(),
+            v2.ToDtype(torch.float32, scale=True),
+
+        ])
+        dataloader,custom_dataset = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name,batch_size=20,transformations=trans)
       #   batch = next(iter(dataloader['train']))
       #   images,masks = batch
+
+      #   image, mask =custom_dataset[0]
+      #   print('Image:')
+      #   print(image.shape)
+      #   print(image.min(), image.max())
+      #   print('Mask:')
+      #   print(mask.shape)
+      #   print(mask.min(), mask.max())
+
+      #   #####Überprüfung der Bilder im Dataset
+      #   for i in range(4):
+      #       image,mask = custom_dataset[i]
+      #       show_image_and_mask(image,mask) 
+
       #   print(images.shape)
       #   print(masks.shape)
       #   print(f"First image min: {images[0].min()}, max: {images[0].max()}")
@@ -69,14 +90,21 @@ if __name__ == '__main__':
 
         ####Training für ein Modell Starten
         print("Train Model with Dichtflächen Dataset:")
-        run(UNet,dataloader,dataset_name)
+        results = run(UNet, dataloader, dataset_name)
 
-        # results_dir = os.path.join('train/results',dataset_name)
-        # trained_model = f"{results_dir}/{save_name}.pth"
+        for optim_name, result in results.items():
+            print(f"Results for {optim_name}:")
+            print(f"Train Losses: {result['train_losses']}")
+            print(f"Validation Losses: {result['val_losses']}")
 
-        # ####Testen für das antrainerte Modell Starten
-        # print("Test Results:")
-        # test(UNet=UNet,test_dir=test_dir,trained_path=trained_model)
+            save_name = f'test_{optim_name}'
+
+            results_dir = os.path.join('train/results',dataset_name)
+            trained_model = f"{results_dir}/{save_name}.pth"
+
+            ####Testen für das antrainerte Modell Starten
+            print(f"Test Results mit {save_name}:")
+            test(UNet=UNet,test_dir=train_dir,test_trained_model=trained_model)
 
         #______________________________________________________________
 
