@@ -50,7 +50,7 @@ if __name__ == '__main__':
         Default downsample : scale_factor = 2
         Default patch:  patch_size= 200
         '''
-        train_dir = process_images(root_dir,dataset_name,downsample_factor=3,patch_size=192)
+        train_dir = process_images(root_dir,dataset_name,patch_size=192)
 
         #Get Dataloader
         '''
@@ -59,54 +59,35 @@ if __name__ == '__main__':
         Default split_size : 0.8
         '''
         trans = v2.Compose([
-            #v2.RandomEqualize(p=1.0),
+            # v2.ToImage(),  # Convert to tensor, only needed if you had a PIL image
+            # v2.ToDtype(torch.uint8, scale=True),
             v2.ToPureTensor(),
             v2.ToDtype(torch.float32, scale=True),
 
         ])
-        dataloader,custom_dataset = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name,batch_size=20,transformations=trans)
-      #   batch = next(iter(dataloader['train']))
-      #   images,masks = batch
+        dataloader,custom_dataset = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name,batch_size=20,transformations=trans) 
 
-      #   image, mask =custom_dataset[0]
-      #   print('Image:')
-      #   print(image.shape)
-      #   print(image.min(), image.max())
-      #   print('Mask:')
-      #   print(mask.shape)
-      #   print(mask.min(), mask.max())
-
-      #   #####Überprüfung der Bilder im Dataset
-      #   for i in range(4):
-      #       image,mask = custom_dataset[i]
-      #       show_image_and_mask(image,mask) 
-
-      #   print(images.shape)
-      #   print(masks.shape)
-      #   print(f"First image min: {images[0].min()}, max: {images[0].max()}")
-      #   print(f"First mask min: {masks[0].min()}, max: {masks[0].max()}") 
+        image, mask =custom_dataset[0]
+        print('Image:')
+        print(image.shape)
+        print(image.min(), image.max())
+        print('Mask:')
+        print(mask.shape)
+        print(mask.min(), mask.max())
 
         #_____________________________________________________________
 
         ####Training für ein Modell Starten
         print("Train Model with Dichtflächen Dataset:")
-        results = run(UNet, dataloader, dataset_name)
+        run(UNet, dataloader, dataset_name)
+        
+        save_name = 'test_1s'
+        results_dir = os.path.join('train/results',dataset_name)
+        trained_model = f"{results_dir}/{save_name}.pth"
+        
+        test(UNet=UNet,test_dir=train_dir,transformations = trans,test_trained_model=trained_model)
 
-        for optim_name, result in results.items():
-            print(f"Results for {optim_name}:")
-            print(f"Train Losses: {result['train_losses']}")
-            print(f"Validation Losses: {result['val_losses']}")
-
-            save_name = f'test_{optim_name}'
-
-            results_dir = os.path.join('train/results',dataset_name)
-            trained_model = f"{results_dir}/{save_name}.pth"
-
-            ####Testen für das antrainerte Modell Starten
-            print(f"Test Results mit {save_name}:")
-            test(UNet=UNet,test_dir=train_dir,test_trained_model=trained_model)
-
-        #______________________________________________________________
+        # #______________________________________________________________
 
         # #####Training für alle Modelle Starten
         # run_compare(dataloader,dataset_name)
