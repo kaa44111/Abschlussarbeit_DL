@@ -42,11 +42,11 @@ def is_empty_mask(mask_patch):
 def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=None, use_padding=False):
     image_folder, mask_folder, image_files, mask_files = find_image_and_mask_files_folder(root_dir, dataset_name)
     
-    # Debugging-Ausgaben hinzufügen
-    print(f"Image Folder: {image_folder}")
-    print(f"Mask Folder: {mask_folder}")
-    print(f"Image Files: {image_files}")
-    print(f"Mask Files: {mask_files}")
+    # # Debugging-Ausgaben hinzufügen
+    # print(f"Image Folder: {image_folder}")
+    # print(f"Mask Folder: {mask_folder}")
+    # print(f"Image Files: {image_files}")
+    # print(f"Mask Files: {mask_files}")
     
     output_base = f"data_modified/{dataset_name}"
     if downsample_factor and patch_size:
