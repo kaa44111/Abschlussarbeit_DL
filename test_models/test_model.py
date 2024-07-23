@@ -45,7 +45,7 @@ def show_predictions(images, masks, preds, idx):
     plt.tight_layout()
     plt.show()
 
-def test(UNet,test_dir,dataset_name,test_trained_model):
+def test(UNet,test_dir,test_trained_model,transformations,dataset_name=None):
     num_class = 1
     #num_class = 6
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -53,27 +53,6 @@ def test(UNet,test_dir,dataset_name,test_trained_model):
     model = UNet(num_class).to(device)
     model.load_state_dict(torch.load(test_trained_model, map_location=device))
     model.eval()
-
-    # trans = v2.Compose([
-    #         v2.ToPureTensor(),
-    #         v2.ToDtype(torch.float32, scale=True),
-    #         #v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    #         ])
-    
-    # trans_mask = v2.Compose([
-    #     v2.ToPureTensor(),
-    # ])
-
-    # # Create another simulation dataset for test
-    # test_dataset = CustomDataset('data', image_transform=trans, mask_transform=trans_mask, count=3)
-    # test_loader = DataLoader(test_dataset, batch_size=3, shuffle=True, num_workers=0)
-    
-    transformations = v2.Compose([
-            v2.RandomEqualize(p=1.0),
-            v2.ToPureTensor(),
-            v2.ToDtype(torch.float32, scale=True),
-            #v2.Normalize(mean=mean, std=std)
-        ])
 
     test_dataset = CustomDataset(test_dir, dataset_name=dataset_name, transform=transformations, count=3)
     test_loader = DataLoader(test_dataset, batch_size=3, shuffle=True, num_workers=0)
@@ -98,17 +77,17 @@ def test(UNet,test_dir,dataset_name,test_trained_model):
 
 
 
-if __name__ == '__main__':
-    try:
-        from models.UNet import UNet
-        #from models.UNetBatchNorm import UNetBatchNorm
-        #from models.UNetMaxPool import UNetMaxPool
+# if __name__ == '__main__':
+#     try:
+#         from models.UNet import UNet
+#         #from models.UNetBatchNorm import UNetBatchNorm
+#         #from models.UNetMaxPool import UNetMaxPool
 
-        test_dir = 'data/Ölflecken'
-        dataset_name = 'Ölflecken'
-        test_trained_model = 'train/results/Ölflecken/test_train.pth'
+#         test_dir = 'data/Ölflecken'
+#         dataset_name = 'Ölflecken'
+#         test_trained_model = 'train/results/Ölflecken/test_train.pth'
 
-        test(UNet,test_dir,dataset_name,test_trained_model)
+#         test(UNet,test_dir,dataset_name,test_trained_model)
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
