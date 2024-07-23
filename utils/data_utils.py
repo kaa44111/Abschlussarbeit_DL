@@ -78,6 +78,19 @@ def show_image_and_mask(image, mask):
 
     plt.show()
 
+def plot_losses(train_losses, val_losses, save_path):
+    '''Saves the train and test Losses in picture'''
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_losses, label='train_loss', color='red')
+    plt.plot(val_losses, label='val_loss', color='blue')
+    plt.xlabel('Epoch #')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(save_path)
+    plt.close()
+
 def show_normalized_images(unnormalized_image, normalized_image, mask):
     '''
     Zeigt das unnormierte Bild, das normierte Bild und die dazugehörige Maske an.
