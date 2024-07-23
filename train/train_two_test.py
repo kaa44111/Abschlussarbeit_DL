@@ -205,3 +205,39 @@ if __name__ == '__main__':
 # Batch : 15
 # UNet parameters: 31031745
 # UNetBatchNorm parameters: 31043521
+
+# for optim_name, create_optimizer in optimizers.items():
+#         print(f"Training with {optim_name} optimizer")
+#         model = UNet(num_class).to(device)
+#         optimizer = create_optimizer(filter(lambda p: p.requires_grad, model.parameters()))
+#         exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1)
+
+#         start = time.time()
+#         model, train_losses, val_losses = train_model(model, dataloader, optimizer, exp_lr_scheduler, num_epochs=30)
+#         end = time.time()
+
+#         elapsed_time_s = end - start
+#         elapsed_time_min = elapsed_time_s / 60
+#         print(f"Elapsed time: {elapsed_time_min:.2f} minutes")
+#         print("\n")
+
+#         save_name = f'test_{optim_name}'
+
+#         results_dir = os.path.join('train/results', dataset_name)
+#         os.makedirs(results_dir, exist_ok=True)
+#         save_dir = f"{results_dir}/{save_name}.pth"
+
+#         torch.save(model.state_dict(), save_dir)
+#         print(f"Model saved to {save_dir}")
+
+#         plot_save_path = os.path.join(results_dir, f'{save_name}_loss_plot.png')
+#         plot_losses(train_losses, val_losses, plot_save_path)
+#         print(f"Loss plot saved to {plot_save_path}")
+
+#         results[optim_name] = {
+#             'model_state_dict': model.state_dict(),
+#             'train_losses': train_losses,
+#             'val_losses': val_losses
+#         }
+
+#     return results
