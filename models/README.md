@@ -45,6 +45,7 @@ For an Example Input Tensor (3, 192, 192)
         Params size (MB): 118.38
         Estimated Total Size (MB): 298.52
 ----------------------------------------------------------------
+![Visualisation:](https://github.com/kaa44111/Abschlussarbeit_DL/blob/main/models/unet.png)
 
 ## UNetBatchNorm
 ----------------------------------------------------------------
@@ -105,6 +106,7 @@ For an Example Input Tensor (3, 192, 192)
         Params size (MB): 118.42
         Estimated Total Size (MB): 435.81
 ----------------------------------------------------------------
+![Visualisation:](https://github.com/kaa44111/Abschlussarbeit_DL/blob/main/models/unet_batchnorm.png)
 
 ## UNetNoMaxPool
 ----------------------------------------------------------------
@@ -143,3 +145,4 @@ For an Example Input Tensor (3, 192, 192)
         Params size (MB): 118.38
         Estimated Total Size (MB): 190.31
 ----------------------------------------------------------------
+![Visualisation:](https://github.com/kaa44111/Abschlussarbeit_DL/blob/main/models/unet_nomaxpool.png)
