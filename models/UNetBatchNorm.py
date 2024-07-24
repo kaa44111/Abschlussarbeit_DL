@@ -13,7 +13,7 @@ from torchsummary import summary
 import torch
 from torch.autograd import Variable
 from torchviz import make_dot
-
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Conv2d(in_channels, out_channels, kernel_size, padding, dilation, groups, bias, padding_mode, device, dtype)
         
@@ -29,7 +29,7 @@ from torchviz import make_dot
         # dtype:
 def plot_graph(model):
     # Dummy-Input für das Modell
-    x = Variable(torch.randn(1, 3, 128, 128)).cuda()
+    x = Variable(torch.randn(1, 3, 128, 128)).to(device)
     y = model(x)
     params_dict = dict(list(model.named_parameters()))
     # Erstelle und speichere das Diagramm des Computation Graphs
@@ -151,9 +151,10 @@ class UNetBatchNorm(nn.Module):
         out = self.outconv(xd42)
 
         return out
-    
+
+
 # Initialisiere das Modell
-model = UNetBatchNorm(1).cuda()
+model = UNetBatchNorm(1).to(device)
 # Plot des Computation Graphs
 plot_graph(model)
 # Zusammenfassung des Modells
