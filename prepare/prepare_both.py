@@ -39,7 +39,8 @@ def downsample_image(img, scale_factor):
 def is_empty_mask(mask_patch):
     return np.array(mask_patch).sum() == 0
 
-def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=None, use_padding=False):
+def process_images(dataset_name, downsample_factor=None, patch_size=None, use_padding=False):
+    root_dir = f"data/{dataset_name}"
     image_folder, mask_folder, image_files, mask_files = find_image_and_mask_files_folder(root_dir, dataset_name)
     
     # # Debugging-Ausgaben hinzufügen
@@ -136,6 +137,56 @@ def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=No
                 mask.save(output_mask_path)
         except Exception as e:
             print(f"Fehler beim Verarbeiten der Datei {img_file} oder {mask_file}: {e}")
+    
+    process_test_images(dataset_name,downsample_factor,patch_size,use_padding,output_dir)
 
     print(f"Verarbeitung abgeschlossen. Ergebnisse gespeichert in: {output_dir}")
+    return output_dir
+
+def process_test_images(dataset_name, downsample_factor=None, patch_size=None, use_padding=False, output_processed=None):
+    test_image_folder = os.path.join("data", dataset_name, 'test')
+    if not os.path.exists(test_image_folder):
+        print(f"Kein 'test'-Verzeichnis gefunden in data/{dataset_name}")
+        return
+
+    test_image_files = [f for f in os.listdir(test_image_folder) if f.endswith(('.png', '.jpg', '.jpeg', '.tif','.bmp'))]
+    output_base = f"data/data_modified/{dataset_name}"
+
+    if output_processed is None:
+        output_dir = os.path.join(output_base, "test_processed")
+    else :
+        output_dir = os.path.join(output_processed,"test")
+    
+    if os.path.exists(output_dir):
+        print(f"Verzeichnis {output_dir} existiert bereits. Keine weiteren Operationen werden durchgeführt.")
+        return output_dir
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    for img_file in test_image_files:
+        img_path = os.path.join(test_image_folder, img_file)
+        if not os.path.exists(img_path):
+            print(f"Bilddatei nicht gefunden: {img_path}")
+            continue
+
+        try:
+            img = Image.open(img_path).convert('RGB')
+
+            if downsample_factor is not None:
+                img = downsample_image(img, downsample_factor)
+
+            if patch_size:
+                img_patches = extract_patches(img, patch_size, use_padding)
+                for i, img_patch in enumerate(img_patches):
+                    img_name = f"{os.path.splitext(img_file)[0]}_patch{i+1}.tif"
+                    output_img_path = os.path.join(output_dir, img_name)
+                    img_patch.save(output_img_path)
+            else:
+                img_name = f"{os.path.splitext(img_file)[0]}_binned.tif"
+                output_img_path = os.path.join(output_dir, img_name)
+                img.save(output_img_path)
+        except Exception as e:
+            print(f"Fehler beim Verarbeiten der Datei {img_file}: {e}")
+
+    print(f"Verarbeitung der Testbilder abgeschlossen. Ergebnisse gespeichert in: {output_dir}")
     return output_dir
