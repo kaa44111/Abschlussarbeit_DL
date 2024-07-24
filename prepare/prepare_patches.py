@@ -68,7 +68,7 @@ def prepare_patches(root_dir, patch_size = None, dataset_name=None):
         dataset_name = os.path.basename(root_dir.rstrip('/\\'))
 
     # Ordnername aus image_folder extrahieren
-    folder_name = f"data_modified/{dataset_name}/patched"    
+    folder_name = f"data/data_modified/{dataset_name}/patched"    
     image_modified = f"{folder_name}/grabs"
     mask_modified = f"{folder_name}/masks"
 
@@ -103,7 +103,7 @@ def process_test_images(root_dir, patch_size):
 
     # Erstellen des neuen Verzeichnisses basierend auf root_dir
     base_name = os.path.basename(root_dir)
-    output_image_folder = os.path.join('data_modified', base_name, 'test')
+    output_image_folder = os.path.join('data/data_modified', base_name, 'test')
 
     for image_name in os.listdir(image_folder):
         if not image_name.endswith('.tif'):

@@ -42,8 +42,8 @@ def find_masks_to_image(root_dir, scale_factor):
 
     # Ordnername aus image_folder extrahieren
     folder_name = os.path.basename(root_dir.rstrip('/\\'))
-    image_modified = f"data_modified/{folder_name}/test/image"
-    mask_modified = f"data_modified/{folder_name}/test/mask"
+    image_modified = f"data/data_modified/{folder_name}/test/image"
+    mask_modified = f"data/data_modified/{folder_name}/test/mask"
 
     # Sicherstellen, dass die Ausgabeordner existieren
     os.makedirs(image_modified, exist_ok=True)

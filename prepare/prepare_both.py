@@ -48,7 +48,7 @@ def process_images(root_dir, dataset_name, downsample_factor=None, patch_size=No
     # print(f"Image Files: {image_files}")
     # print(f"Mask Files: {mask_files}")
     
-    output_base = f"data_modified/{dataset_name}"
+    output_base = f"data/data_modified/{dataset_name}"
     if downsample_factor and patch_size:
         output_dir = f"{output_base}/processed"
     elif downsample_factor:

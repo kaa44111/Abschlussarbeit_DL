@@ -16,7 +16,7 @@ from PIL import Image
 
 if __name__ == '__main__':
     try: 
-        root_dir = 'data_modified/RetinaVessel/train'
+        root_dir = 'data/data_modified/RetinaVessel/train'
         image_folder = os.path.join(root_dir, 'grabs')  # Verzeichnis mit deinen Bildern
 
         trans= transforms.Compose([
