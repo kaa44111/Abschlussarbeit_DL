@@ -9,7 +9,21 @@ if project_path not in sys.path:
 import torch
 import torch.nn as nn
 from torch.nn.functional import relu
+from torchsummary import summary
+import torch
+from torch.autograd import Variable
+from torchviz import make_dot
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
+def plot_graph(model):
+    # Dummy-Input für das Modell
+    x = Variable(torch.randn(1, 3, 128, 128)).to(device)
+    y = model(x)
+    params_dict = dict(list(model.named_parameters()))
+    # Erstelle und speichere das Diagramm des Computation Graphs
+    make_dot(y.mean(), params=params_dict).render("unet", format="png")
 
 
 class UNet(nn.Module):
@@ -111,3 +125,10 @@ class UNet(nn.Module):
             out = self.outconv(xd42)
 
             return out
+    
+# Initialisiere das Modell
+model = UNet(1).to(device)
+# Plot des Computation Graphs
+#plot_graph(model)
+# Zusammenfassung des Modells
+summary(model, (3, 192, 192))

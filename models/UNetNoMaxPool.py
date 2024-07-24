@@ -9,7 +9,21 @@ if project_path not in sys.path:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchsummary import summary
+import torch
+from torch.autograd import Variable
+from torchviz import make_dot
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
+def plot_graph(model):
+    # Dummy-Input für das Modell
+    x = Variable(torch.randn(1, 3, 128, 128)).to(device)
+    y = model(x)
+    params_dict = dict(list(model.named_parameters()))
+    # Erstelle und speichere das Diagramm des Computation Graphs
+    make_dot(y.mean(), params=params_dict).render("unet", format="png")
 
 '''
 Die zweiten Convolutional-Schichten in jedem Encoder-Block (e12, e22, e32, e42), 
@@ -23,7 +37,7 @@ haben jetzt stride=2, was das Downsampling durchführt wird.
 
 '''
 
-class UNetMaxPool(nn.Module):
+class UNetNoMaxPool(nn.Module):
     def __init__(self, n_class):
         super().__init__()
 
@@ -118,8 +132,12 @@ class UNetMaxPool(nn.Module):
 
         return out
 
-# # Modell initialisieren
-# model = UNetMaxPool(n_class=3)
+# Initialisiere das Modell
+model = UNetNoMaxPool(1).to(device)
+# Plot des Computation Graphs
+#plot_graph(model)
+# Zusammenfassung des Modells
+summary(model, (3, 192, 192))
 
 # # Beispiel-Input
 # input_tensor = torch.randn(15, 3, 256, 256)  # Batchgröße 15, 3 Kanäle (RGB), 256x256 Bilder

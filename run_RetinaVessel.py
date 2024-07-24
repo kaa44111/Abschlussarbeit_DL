@@ -27,7 +27,7 @@ from utils.data_utils import compute_mean_std
 #Modelle:
 from models.UNet import UNet
 from models.UNetBatchNorm import UNetBatchNorm
-from models.UNetMaxPool import UNetMaxPool
+from models.UNetNoMaxPool import UNetMaxPool
 
 
 '''

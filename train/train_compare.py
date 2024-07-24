@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 from models.UNetBatchNorm import UNetBatchNorm
 from models.UNet import UNet
-from models.UNetMaxPool import UNetMaxPool
+from models.UNetNoMaxPool import UNetMaxPool
 
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()

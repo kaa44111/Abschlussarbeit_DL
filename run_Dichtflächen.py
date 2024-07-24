@@ -32,7 +32,7 @@ from utils.data_utils import compute_mean_std, show_image_and_mask
 #Modelle:
 from models.UNet import UNet
 from models.UNetBatchNorm import UNetBatchNorm
-from models.UNetMaxPool import UNetMaxPool
+from models.UNetNoMaxPool import UNetMaxPool
 
 
 if __name__ == '__main__':
