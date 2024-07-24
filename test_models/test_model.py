@@ -130,6 +130,8 @@ class ImageOnlyDataset(Dataset):
             print(f"Error loading data at index {idx}: {e}")
             return None
 
+import matplotlib.pyplot as plt
+
 def load_model(model_class, checkpoint_path, num_class=1):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model_class(num_class)
@@ -138,34 +140,51 @@ def load_model(model_class, checkpoint_path, num_class=1):
     model.eval()
     return model
 
-def save_predictions(model, dataloader, output_folder):
+def save_predictions_with_originals_matplotlib(model, dataloader, output_folder):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     os.makedirs(output_folder, exist_ok=True)
 
-    for i, inputs in enumerate(dataloader):
+    for i, (inputs) in enumerate(dataloader):
         inputs = inputs.to(device)
 
         with torch.no_grad():
             outputs = model(inputs)
             preds = torch.sigmoid(outputs)
-            preds = (preds > 0.5).float()  # Apply a threshold
+            preds = (preds > 0.5).float()
 
         preds = preds.cpu().numpy()
+        inputs = inputs.cpu().numpy()
 
         for j in range(preds.shape[0]):
+            original_img = inputs[j].transpose(1, 2, 0)  # Assuming channel first format
+            original_img = (original_img * 255).astype(np.uint8)
             pred_img = preds[j][0] * 255  # Assuming single channel output
-            pred_img = Image.fromarray(pred_img.astype(np.uint8))
-            pred_img.save(os.path.join(output_folder, f"prediction_{i * preds.shape[0] + j}.png"))
+            pred_img = pred_img.astype(np.uint8)
 
-    print(f"Predictions saved to {output_folder}")
+            # Plotting the images using matplotlib
+            fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+            ax[0].imshow(original_img)
+            ax[0].set_title('Original Image')
+            ax[0].axis('off')
+            
+            ax[1].imshow(pred_img, cmap='gray')
+            ax[1].set_title('Predicted Mask')
+            ax[1].axis('off')
+
+            # Save the figure
+            save_path = os.path.join(output_folder, f"combined_{i * preds.shape[0] + j}.png")
+            plt.savefig(save_path)
+            plt.close(fig)
+
+    print(f"Combined images saved to {output_folder}")
 
 def test_model(UNet, test_dataloader, checkpoint_path, output_folder):
     # Load the model
     model = load_model(UNet, checkpoint_path)
 
-    # Save predictions
-    print("Saving predictions...")
-    save_predictions(model, test_dataloader, output_folder)
+    # Save predictions with originals using matplotlib
+    print("Saving predictions with originals using matplotlib...")
+    save_predictions_with_originals_matplotlib(model, test_dataloader, output_folder)
 
 if __name__ == '__main__':
 
