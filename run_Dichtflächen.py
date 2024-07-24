@@ -18,21 +18,21 @@ from datasets.OneFeature import get_dataloaders
 from prepare.prepare_both import process_images
 from prepare.bounding_box import process_and_save_cropped_images
 
-#Train
-from train.train import run
-from train.train_compare import run_compare
+# #Train
+# from train.train import run
+# from train.train_compare import run_compare
 
-#Test
-from test_models.test_model import test
-from test_models.test_different_models import test_compare
+# #Test
+# from test_models.test_model import test
+# from test_models.test_different_models import test_compare
 
-#Falls man die Bilder Normalisiern will
-from utils.data_utils import compute_mean_std, show_image_and_mask
+# #Falls man die Bilder Normalisiern will
+# from utils.data_utils import compute_mean_std, show_image_and_mask
 
 #Modelle:
 from models.UNet import UNet
-from models.UNetBatchNorm import UNetBatchNorm
-from models.UNetNoMaxPool import UNetMaxPool
+# from models.UNetBatchNorm import UNetBatchNorm
+# from models.UNetNoMaxPool import UNetNoMaxPool
 
 
 if __name__ == '__main__':
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         Default downsample : scale_factor = 2
         Default patch:  patch_size= 200
         '''
-        train_dir = process_images(root_dir,dataset_name,patch_size=192)
+        train_dir = process_images(dataset_name,patch_size=192)
 
         #Get Dataloader
         '''
@@ -77,15 +77,15 @@ if __name__ == '__main__':
 
         #_____________________________________________________________
 
-        ####Training für ein Modell Starten
-        print("Train Model with Dichtflächen Dataset:")
-        run(UNet, dataloader, dataset_name)
+        # ####Training für ein Modell Starten
+        # print("Train Model with Dichtflächen Dataset:")
+        # run(UNet, dataloader, dataset_name)
         
-        save_name = 'test_1s'
-        results_dir = os.path.join('train/results',dataset_name)
-        trained_model = f"{results_dir}/{save_name}.pth"
+        # save_name = 'test_1s'
+        # results_dir = os.path.join('train/results',dataset_name)
+        # trained_model = f"{results_dir}/{save_name}.pth"
         
-        test(UNet=UNet,test_dir=train_dir,transformations = trans,test_trained_model=trained_model)
+        # test(UNet=UNet,test_dir=train_dir,transformations = trans,test_trained_model=trained_model)
 
         # #______________________________________________________________
 
