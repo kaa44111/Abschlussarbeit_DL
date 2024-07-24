@@ -132,12 +132,14 @@ class UNetNoMaxPool(nn.Module):
 
         return out
 
-# Initialisiere das Modell
-model = UNetNoMaxPool(1).to(device)
-# Plot des Computation Graphs
-#plot_graph(model)
-# Zusammenfassung des Modells
-summary(model, (3, 192, 192))
+# # Initialisiere das Modell
+# model = UNetNoMaxPool(1).to(device)
+
+# # Plot des Computation Graphs
+# plot_graph(model)
+
+# # Zusammenfassung des Modells
+# summary(model, (3, 192, 192))
 
 # # Beispiel-Input
 # input_tensor = torch.randn(15, 3, 256, 256)  # Batchgröße 15, 3 Kanäle (RGB), 256x256 Bilder

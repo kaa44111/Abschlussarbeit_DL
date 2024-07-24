@@ -153,9 +153,9 @@ class UNetBatchNorm(nn.Module):
         return out
 
 
-# Initialisiere das Modell
-model = UNetBatchNorm(1).to(device)
-# Plot des Computation Graphs
-#plot_graph(model)
-# Zusammenfassung des Modells
-summary(model, (3, 192, 192))
+# # Initialisiere das Modell
+# model = UNetBatchNorm(1).to(device)
+# # Plot des Computation Graphs
+# plot_graph(model)
+# # Zusammenfassung des Modells
+# summary(model, (3, 192, 192))

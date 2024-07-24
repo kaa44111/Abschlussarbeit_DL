@@ -126,9 +126,11 @@ class UNet(nn.Module):
 
             return out
     
-# Initialisiere das Modell
-model = UNet(1).to(device)
-# Plot des Computation Graphs
-#plot_graph(model)
-# Zusammenfassung des Modells
-summary(model, (3, 192, 192))
+# # Initialisiere das Modell
+# model = UNet(1).to(device)
+
+# # Plot des Computation Graphs
+# plot_graph(model)
+
+# # Zusammenfassung des Modells
+# summary(model, (3, 192, 192))
