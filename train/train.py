@@ -16,6 +16,7 @@ import time
 import copy
 from PIL import Image
 import numpy as np
+from torch.cuda.amp import autocast, GradScaler
 
 
 def renormalize(tensor):
@@ -93,6 +94,7 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     best_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 1e10
+    scaler = GradScaler()  # GradScaler initialisieren
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -124,7 +126,7 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
                 # print(f"Max input value: {inputs.max()}, Min input value: {inputs.min()}")
                 # print(f"Max label value: {labels.max()}, Min label value: {labels.min()}")
 
-                # zero the parameter gradients
+                # # zero the parameter gradients
                 optimizer.zero_grad()
 
                 # forward
@@ -133,17 +135,22 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
 
                     #save_images_und_masks(inputs, labels)
 
-                    outputs = model(inputs)
+                    with autocast():  # Autocast für automatische Mischpräzision
+                        outputs = model(inputs)
+                        loss = calc_loss(outputs, labels, metrics)
 
                     # print(f"Outputs shape: {outputs.shape}, dtype: {outputs.dtype}")
                     # print(f"Max output value: {outputs.max()}, Min output value: {outputs.min()}")
 
-                    loss = calc_loss(outputs, labels, metrics)
+                    #loss = calc_loss(outputs, labels, metrics)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
+                        # loss.backward()
+                        # optimizer.step()
+                        scaler.scale(loss).backward()  # Scale den Verlust und berechne die Gradienten
+                        scaler.step(optimizer)  # Optimierungsschritt mit Scaler
+                        scaler.update()  # Scaler aktualisieren
 
                 # statistics
                 epoch_samples += inputs.size(0)
