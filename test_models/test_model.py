@@ -102,6 +102,7 @@ import os
 from collections import defaultdict
 from train.train import print_metrics, calc_loss
 from torchvision.transforms import v2
+import seaborn as sns
 
 
 class ImageOnlyDataset(Dataset):
@@ -178,6 +179,49 @@ def save_predictions_with_originals_matplotlib(model, dataloader, output_folder)
 
     print(f"Combined images saved to {output_folder}")
 
+
+def show_predictions_with_heatmaps(model, dataloader, num_images_per_window=3):
+    import seaborn as sns
+    
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+
+    images, preds = [], []
+
+    for inputs in dataloader:
+        inputs = inputs.to(device)
+        with torch.no_grad():
+            outputs = model(inputs)
+            pred = torch.sigmoid(outputs)
+
+        images.extend(inputs.cpu().numpy())
+        preds.extend(pred.cpu().numpy())
+
+    total_images = len(images)
+    num_windows = (total_images + num_images_per_window - 1) // num_images_per_window
+
+    for window_index in range(num_windows):
+        start_index = window_index * num_images_per_window
+        end_index = min(start_index + num_images_per_window, total_images)
+        num_images_in_window = end_index - start_index
+
+        fig, axes = plt.subplots(num_images_in_window, 2, figsize=(10, 5 * num_images_in_window))
+
+        for i in range(num_images_in_window):
+            img_index = start_index + i
+            img = images[img_index].transpose(1, 2, 0)
+            axes[i, 0].imshow(img)
+            axes[i, 0].set_title('Original Image')
+            axes[i, 0].axis('off')
+
+            pred = preds[img_index][0]
+            sns.heatmap(pred, ax=axes[i, 1], cmap='viridis')
+            axes[i, 1].set_title('Predicted Mask')
+            axes[i, 1].axis('off')
+
+        plt.tight_layout()
+        plt.show()
+
 def test_model(UNet, test_dataloader, checkpoint_path, output_folder):
     # Load the model
     model = load_model(UNet, checkpoint_path)
@@ -202,12 +246,12 @@ if __name__ == '__main__':
         test_dataset = ImageOnlyDataset(test_dir, transform=transformations)
         test_loader = DataLoader(test_dataset, batch_size=20, shuffle=True, num_workers=0)
 
-        test_model(UNetBatchNorm, test_loader, 'train/results/Dichtflächen/test_UNetBatchNorm.pth', 'test_models/evaluate/Dichfläche')
+        model = load_model(UNetBatchNorm,'train/results/Dichtflächen/test_UNetBatchNorm_Dropout_StepLR.pth')
 
+        #test_model(UNetBatchNorm, test_loader, 'train/results/Dichtflächen/test_UNetBatchNorm.pth', 'test_models/evaluate/Dichfläche')
+
+        # Zeige die Vorhersagen für die ersten 3 Bilder mit Heatmaps an
+        show_predictions_with_heatmaps(model, test_loader, num_images_per_window=2)    
+    
     except Exception as e:
         print(f"An error occurred: {e}")
-# Example usage:
-# Define the test dataloader
-# test_dataloader = DataLoader(...)
-
-# test_model(UNet, test_dataloader, 'path_to_trained_model.pth', 'output_folder_for_predictions')
