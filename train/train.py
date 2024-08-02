@@ -173,6 +173,18 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
     model.load_state_dict(best_model_wts)
     return model
 
+def select_scheduler(optimizer, scheduler_type, **kwargs):
+    if scheduler_type == 'StepLR':
+        return lr_scheduler.StepLR(optimizer, **kwargs)
+    elif scheduler_type == 'MultiStepLR':
+        return lr_scheduler.MultiStepLR(optimizer, **kwargs)
+    elif scheduler_type == 'ExponentialLR':
+        return lr_scheduler.ExponentialLR(optimizer, **kwargs)
+    elif scheduler_type == 'ReduceLROnPlateau':
+        return lr_scheduler.ReduceLROnPlateau(optimizer, **kwargs)
+    else:
+        raise ValueError(f"Unknown scheduler type: {scheduler_type}")
+
 def run(UNet,dataloader,dataset_name,save_name=None):
     num_class = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -181,7 +193,12 @@ def run(UNet,dataloader,dataset_name,save_name=None):
 
     optimizer_ft = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
 
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
+    scheduler_type = 'StepLR'
+    scheduler_params = {'step_size': 7, 'gamma': 0.1}
+
+    #exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=30, gamma=0.1)
+    # Select scheduler
+    exp_lr_scheduler = select_scheduler(optimizer_ft, scheduler_type, **scheduler_params)
 
     start = time.time()
     model = train_model(model,dataloader, optimizer_ft, exp_lr_scheduler, num_epochs=30)
@@ -198,7 +215,7 @@ def run(UNet,dataloader,dataset_name,save_name=None):
         save_name = 'test_1s'
 
     results_dir = os.path.join('train/results',dataset_name)
-    save_dir = f"{results_dir}/{save_name}.pth"
+    save_dir = f"{results_dir}/{save_name}_{scheduler_type}.pth"
 
     # Speichern des trainierten Modells
     torch.save(model.state_dict(), save_dir)
