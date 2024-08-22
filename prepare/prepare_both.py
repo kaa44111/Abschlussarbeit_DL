@@ -51,11 +51,11 @@ def process_images(dataset_name, downsample_factor=None, patch_size=None, use_pa
     
     output_base = f"data/data_modified/{dataset_name}"
     if downsample_factor and patch_size:
-        output_dir = f"{output_base}/processed"
+        output_dir = f"{output_base}/processed_NIO"
     elif downsample_factor:
-        output_dir = f"{output_base}/downsampled"
+        output_dir = f"{output_base}/downsampled_NIO"
     elif patch_size:
-        output_dir = f"{output_base}/patched"
+        output_dir = f"{output_base}/patched_NIO"
     else:
         raise ValueError("Entweder downsample_factor oder patch_size muss angegeben werden.")
     
@@ -68,6 +68,9 @@ def process_images(dataset_name, downsample_factor=None, patch_size=None, use_pa
 
     os.makedirs(image_modified, exist_ok=True)
     os.makedirs(mask_modified, exist_ok=True)
+
+    empty_mask_count = 0
+    non_empty_mask_count = 0
 
     for img_file, mask_file in zip(image_files, mask_files):
         img_path = os.path.join(image_folder, img_file)
@@ -103,8 +106,18 @@ def process_images(dataset_name, downsample_factor=None, patch_size=None, use_pa
                 mask_patches = extract_patches(mask, patch_size, use_padding)
 
                 for i, (img_patch, mask_patch) in enumerate(zip(img_patches, mask_patches)):
+                    # if is_empty_mask(mask_patch):
+                    #     if empty_mask_count < 100:
+                    #         empty_mask_count += 1  # Inkrementiere den Zähler
+                    #     else:
+                    #         non_empty_mask_count += 1
+                    #         continue  # Überspringe, wenn mehr als 4 leere Masken
+
                     if is_empty_mask(mask_patch):
-                        continue
+                        empty_mask_count += 1  # Inkrementiere den Zähler
+                        continue  # Überspringe leere Masken
+                    else:
+                        non_empty_mask_count += 1
                     
                     img_name = f"{os.path.splitext(img_file)[0]}_patch{i+1}.tif"
                     mask_name = f"{os.path.splitext(img_file)[0]}_patch{i+1}.tif"
@@ -123,6 +136,12 @@ def process_images(dataset_name, downsample_factor=None, patch_size=None, use_pa
                     img_patch.save(output_img_path)
                     mask_patch.save(output_mask_path)
             else:
+
+                if is_empty_mask(mask):
+                    empty_mask_count += 1
+                else:
+                    non_empty_mask_count += 1
+
                 img_name = f"{os.path.splitext(img_file)[0]}_binned.tif"
                 mask_name = f"{os.path.splitext(img_file)[0]}_binned.tif"
                     
@@ -135,12 +154,16 @@ def process_images(dataset_name, downsample_factor=None, patch_size=None, use_pa
                 
                 img.save(output_img_path)
                 mask.save(output_mask_path)
+
         except Exception as e:
             print(f"Fehler beim Verarbeiten der Datei {img_file} oder {mask_file}: {e}")
     
-    process_test_images(dataset_name,downsample_factor,patch_size,use_padding,output_dir)
+    #process_test_images(dataset_name,downsample_factor,patch_size,use_padding,output_dir)
 
     print(f"Verarbeitung abgeschlossen. Ergebnisse gespeichert in: {output_dir}")
+    print(f"Anzahl der Bilder mit leeren Masken: {empty_mask_count}")
+    print(f"Anzahl der Bilder mit nicht-leeren Masken: {non_empty_mask_count}")
+
     return output_dir
 
 def process_test_images(dataset_name, downsample_factor=None, patch_size=None, use_padding=False, output_processed=None):
@@ -153,7 +176,7 @@ def process_test_images(dataset_name, downsample_factor=None, patch_size=None, u
     output_base = f"data/data_modified/{dataset_name}"
 
     if output_processed is None:
-        output_dir = os.path.join(output_base, "test_processed")
+        output_dir = os.path.join(output_base, "test_processed1")
     else :
         output_dir = os.path.join(output_processed,"test")
     
@@ -163,7 +186,14 @@ def process_test_images(dataset_name, downsample_factor=None, patch_size=None, u
 
     os.makedirs(output_dir, exist_ok=True)
 
+    # Zähler für die Anzahl der verarbeiteten Bilder
+    processed_count = 0
+
     for img_file in test_image_files:
+
+        if processed_count >= 4:  # Abbrechen, wenn mehr als 5 Bilder verarbeitet wurden
+            break
+
         img_path = os.path.join(test_image_folder, img_file)
         if not os.path.exists(img_path):
             print(f"Bilddatei nicht gefunden: {img_path}")
@@ -185,8 +215,27 @@ def process_test_images(dataset_name, downsample_factor=None, patch_size=None, u
                 img_name = f"{os.path.splitext(img_file)[0]}_binned.tif"
                 output_img_path = os.path.join(output_dir, img_name)
                 img.save(output_img_path)
+
+            processed_count += 1  # Inkrementiere den Zähler
+
         except Exception as e:
             print(f"Fehler beim Verarbeiten der Datei {img_file}: {e}")
 
     print(f"Verarbeitung der Testbilder abgeschlossen. Ergebnisse gespeichert in: {output_dir}")
     return output_dir
+
+
+if __name__ == '__main__':
+     try:
+        #Dataset Informations (root_dir, dataset_name)
+        '''
+        Default dataset_name = data/{dataset_name}
+        '''
+        root_dir= 'data/Dichtflächen_Cropped'
+        dataset_name = 'Dichtflächen_Cropped'
+        
+        train_dir = process_images(dataset_name,downsample_factor=2,patch_size=192)
+        #process_test_images(dataset_name,patch_size=192,downsample_factor=2,output_processed=None)
+
+     except Exception as e:
+        print(f"An error occurred: {e}")
