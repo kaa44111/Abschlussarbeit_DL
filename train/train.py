@@ -17,6 +17,10 @@ import copy
 from PIL import Image
 import numpy as np
 from torch.cuda.amp import autocast, GradScaler
+import matplotlib.pyplot as plt
+from torchinfo import summary
+from torch.utils.tensorboard import SummaryWriter
+
 
 
 def renormalize(tensor):
@@ -64,15 +68,18 @@ def dice_loss(pred, target, smooth=1.):
 
     return loss.mean()
 
-
 def calc_loss(pred, target, metrics, bce_weight=0.5):
+    # Verwende Binary Cross Entropy (BCE) Loss
     bce = F.binary_cross_entropy_with_logits(pred, target)
 
-    pred = F.sigmoid(pred)
+    # Wende Sigmoid an, um die Ausgaben in den Bereich [0,1] zu skalieren
+    pred = torch.sigmoid(pred)
     dice = dice_loss(pred, target)
 
+    # Kombiniere BCE und Dice Loss
     loss = bce * bce_weight + dice * (1 - bce_weight)
 
+    # Metriken für Monitoring aktualisieren
     metrics['bce'] += bce.data.cpu().numpy() * target.size(0)
     metrics['dice'] += dice.data.cpu().numpy() * target.size(0)
     metrics['loss'] += loss.data.cpu().numpy() * target.size(0)
@@ -89,13 +96,22 @@ def print_metrics(metrics, epoch_samples, phase):
 
 
 
-def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
-    #dataloaders,_ = get_dataloaders('data_modified/RetinaVessel/train')
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    best_model_wts = copy.deepcopy(model.state_dict())
-    best_loss = 1e10
-    scaler = GradScaler()  # GradScaler initialisieren
+def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25,save_name=None):
+    # TensorBoard Writer initialisieren
+    writer = SummaryWriter(log_dir=f'runs/{save_name}')
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #best_model_wts = copy.deepcopy(model.state_dict())
+    #best_loss = 1e10
+    #scaler = GradScaler()  # GradScaler initialisieren
+
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_loss = float('inf')
+
+    train_losses = []
+    val_losses = []
+
+    # Each epoch has a training and validation phase
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
@@ -130,33 +146,42 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
                 optimizer.zero_grad()
 
                 # forward
-                # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
 
                     #save_images_und_masks(inputs, labels)
 
-                    with autocast():  # Autocast für automatische Mischpräzision
-                        outputs = model(inputs)
-                        loss = calc_loss(outputs, labels, metrics)
+                    # with autocast():  # Autocast für automatische Mischpräzision
+                    #     outputs = model(inputs)
+                    #     loss = calc_loss(outputs, labels, metrics)
 
                     # print(f"Outputs shape: {outputs.shape}, dtype: {outputs.dtype}")
                     # print(f"Max output value: {outputs.max()}, Min output value: {outputs.min()}")
 
-                    #loss = calc_loss(outputs, labels, metrics)
+                    outputs = model(inputs)
+                    loss = calc_loss(outputs, labels, metrics)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
-                        # loss.backward()
-                        # optimizer.step()
-                        scaler.scale(loss).backward()  # Scale den Verlust und berechne die Gradienten
-                        scaler.step(optimizer)  # Optimierungsschritt mit Scaler
-                        scaler.update()  # Scaler aktualisieren
+                        loss.backward()
+                        optimizer.step()
+                        # scaler.scale(loss).backward()  # Scale den Verlust und berechne die Gradienten
+                        # scaler.step(optimizer)  # Optimierungsschritt mit Scaler
+                        # scaler.update()  # Scaler aktualisieren
 
                 # statistics
                 epoch_samples += inputs.size(0)
 
-            print_metrics(metrics, epoch_samples, phase)
+            #print_metrics(metrics, epoch_samples, phase)
             epoch_loss = metrics['loss'] / epoch_samples
+
+            if phase == 'train':
+                train_losses.append(epoch_loss)
+                writer.add_scalar('Loss/train', epoch_loss, epoch)
+            else:
+                val_losses.append(epoch_loss)
+                writer.add_scalar('Loss/val', epoch_loss, epoch)
+
+            print_metrics(metrics, epoch_samples, phase)
 
             # deep copy the model
             if phase == 'val' and epoch_loss < best_loss:
@@ -167,10 +192,33 @@ def train_model(model,dataloaders, optimizer, scheduler, num_epochs=25):
         time_elapsed = time.time() - since
         print('{:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
+         # Lernrate protokollieren
+        current_lr = optimizer.param_groups[0]['lr']
+        writer.add_scalar('Learning Rate', current_lr, epoch)
+
+         # Optional: Modellgraph nach dem ersten Forward-Pass protokollieren
+        if epoch == 0:
+            writer.add_graph(model, inputs)
+
     print('Best val loss: {:4f}'.format(best_loss))
 
     # load best model weights
     model.load_state_dict(best_model_wts)
+
+    # Diagramm des Trainingsverlaufs speichern
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_losses, label='Training Loss')
+    plt.plot(val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.title('Training and Validation Loss')
+    plt.savefig(f"{save_name}.png")
+    plt.show()
+
+    writer.add_figure('Loss Curve', plt.gcf())
+    writer.close()
+
     return model
 
 def select_scheduler(optimizer, scheduler_type, **kwargs):
@@ -201,7 +249,7 @@ def run(UNet,dataloader,dataset_name,save_name=None):
     exp_lr_scheduler = select_scheduler(optimizer_ft, scheduler_type, **scheduler_params)
 
     start = time.time()
-    model = train_model(model,dataloader, optimizer_ft, exp_lr_scheduler, num_epochs=30)
+    model = train_model(model,dataloader, optimizer_ft, exp_lr_scheduler, num_epochs=30,save_name=save_name)
     end = time.time()
 
     # Verstrichene Zeit in Sekunden
