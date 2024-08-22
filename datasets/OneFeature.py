@@ -18,10 +18,11 @@ import torchvision.transforms.functional as F
 from torchvision import transforms
 
 class CustomDataset(Dataset):
-    def __init__(self, root_dir, dataset_name=None, transform=None, count=None):
+    def __init__(self, root_dir, dataset_name=None, transform=None, mask_transform=None, count=None):
         self.root_dir=root_dir
         self.dataset_name = dataset_name
         self.transform = transform
+        self.mask_transform = mask_transform
         self.count = count
 
         # Pfade zu den Bildern und Masken
@@ -70,16 +71,17 @@ class CustomDataset(Dataset):
             # Laden des Bildes
             img_name = os.path.join(self.image_folder, self.image_files[idx])
             image = Image.open(img_name).convert('RGB')
-            image = v2.functional.pil_to_tensor(image).float()/ 255.0
+            #image = v2.functional.pil_to_tensor(image).float()/ 255.0
             #image= tv_tensors.Image(image)
 
             # Laden der Maske für dieses Bild
             mask_name = os.path.join(self.mask_folder, self.mask_files[idx])
             mask = Image.open(mask_name).convert('L')
-            mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0
+            #mask = torch.from_numpy(np.array(mask)).unsqueeze(0).float() / 255.0
 
             if self.transform:
                 image = self.transform(image)
+                
             # else:
             #     image = F.to_tensor(image)
 
