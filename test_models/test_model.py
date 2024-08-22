@@ -100,37 +100,10 @@ import numpy as np
 from PIL import Image
 import os
 from collections import defaultdict
-from train.train import print_metrics, calc_loss
+#from train.train import run
 from torchvision.transforms import v2
 import seaborn as sns
-
-
-class ImageOnlyDataset(Dataset):
-    def __init__(self, image_dir, transform=None):
-        self.image_dir = image_dir
-        self.transform = transform
-        self.image_files = sorted(os.listdir(self.image_dir), key=lambda x: int(''.join(filter(str.isdigit, x))))
-
-        print(f"Found {len(self.image_files)} images")
-
-    def __len__(self):
-        return len(self.image_files)
-
-    def __getitem__(self, idx):
-        try:
-            img_name = os.path.join(self.image_dir, self.image_files[idx])
-            image = Image.open(img_name).convert('RGB')
-            image = v2.functional.pil_to_tensor(image).float() / 255.0
-
-            if self.transform:
-                image = self.transform(image)
-
-            return image
-
-        except Exception as e:
-            print(f"Error loading data at index {idx}: {e}")
-            return None
-
+from datasets.test import CustomDataset
 import matplotlib.pyplot as plt
 
 def load_model(model_class, checkpoint_path, num_class=1):
@@ -179,10 +152,7 @@ def save_predictions_with_originals_matplotlib(model, dataloader, output_folder)
 
     print(f"Combined images saved to {output_folder}")
 
-
-def show_predictions_with_heatmaps(model, dataloader, num_images_per_window=3):
-    import seaborn as sns
-    
+def show_predictions_with_heatmaps(model, dataloader, num_images_per_window=3):    
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
 
@@ -215,7 +185,7 @@ def show_predictions_with_heatmaps(model, dataloader, num_images_per_window=3):
             axes[i, 0].axis('off')
 
             pred = preds[img_index][0]
-            sns.heatmap(pred, ax=axes[i, 1], cmap='viridis')
+            sns.heatmap(pred, ax=axes[i, 1], cmap='viridis', vmin=0.0, vmax=1.0)
             axes[i, 1].set_title('Predicted Mask')
             axes[i, 1].axis('off')
 
@@ -234,19 +204,17 @@ if __name__ == '__main__':
 
     try:
         from models.UNetBatchNorm import UNetBatchNorm
-        test_dir = 'data/data_modified/Dichtflächen/patched/test'
+        test_dir = 'data/data_modified/Dichtflächen_Cropped/patched_NIO'
     
         transformations = v2.Compose([
-            #v2.RandomEqualize(p=1.0),
-            v2.ToPureTensor(),
+            v2.PILToTensor(),
             v2.ToDtype(torch.float32, scale=True),
-            #v2.Normalize(mean=mean, std=std)
-            ])
+        ])
 
-        test_dataset = ImageOnlyDataset(test_dir, transform=transformations)
+        test_dataset = CustomDataset(test_dir, transform=transformations,is_labeled=None)
         test_loader = DataLoader(test_dataset, batch_size=20, shuffle=True, num_workers=0)
 
-        model = load_model(UNetBatchNorm,'train/results/Dichtflächen/test_UNetBatchNorm_Dropout_StepLR.pth')
+        model = load_model(UNetBatchNorm,'train/results/Dichtflächen_Cropped/Patched_BN_NIO_NoAug_20_Adam_StepLR.pth')
 
         #test_model(UNetBatchNorm, test_loader, 'train/results/Dichtflächen/test_UNetBatchNorm.pth', 'test_models/evaluate/Dichfläche')
 
