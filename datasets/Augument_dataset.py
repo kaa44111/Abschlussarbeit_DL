@@ -202,7 +202,7 @@ if __name__ == '__main__':
         train_dir = 'data/data_modified/Dichtflächen/patched'
         dataset_name = 'Dichtflächen'
     
-        dataloader,custom_dataset = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name,batch_size=10)
+        dataloader,custom_dataset = get_dataloaders(root_dir=train_dir,dataset_name=dataset_name,batch_size=20)
 
         batch = next(iter(dataloader['train']))
         images,masks = batch
