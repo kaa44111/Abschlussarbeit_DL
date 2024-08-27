@@ -21,43 +21,6 @@ import matplotlib.pyplot as plt
 from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
 
-
-
-def renormalize(tensor):
-        minFrom= tensor.min()
-        maxFrom= tensor.max()
-        minTo = 0
-        maxTo=1
-        return minTo + (maxTo - minTo) * ((tensor - minFrom) / (maxFrom - minFrom))
-
-def save_images_und_masks(inputs, label):
-    # Verarbeite das Eingabebild
-    first_image = inputs[0]  # Das erste Bild im Batch
-    first_image_2d = first_image.permute(1, 2, 0)  # Ändert die Dimensionen von [3, 192, 192] zu [192, 192, 3]
-    
-    # Bild normalisieren und speichern
-    tensorNeu = renormalize(first_image_2d)
-    image_array = (tensorNeu * 255).cpu().detach().numpy().astype(np.uint8)
-    image = Image.fromarray(image_array)
-    image.save('test_trainloop/images/a.png')
-
-    # Verarbeite die Masken
-    first_label = label[0]  # Die Masken des ersten Bildes im Batch
-    num_masks = first_label.shape[0]  # Anzahl der Masken
-
-    for i in range(num_masks):
-        mask = first_label[i]
-        mask_array = mask.cpu().detach().numpy()
-        
-        # Normalisierung der Maske, falls die Werte nicht im Bereich [0, 1] sind
-        mask_array1 = renormalize(mask_array)
-        print(f"Mask {i} min: {mask_array1.min()}, max: {mask_array1.max()}")
-        
-        mask_array = (mask_array1 * 255).astype(np.uint8)  # Konvertiere zum uint8 Format
-        mask_image = Image.fromarray(mask_array, mode='L')  # Mode 'L' für Graustufenbilder
-        mask_image.save(f'test_trainloop/masks/mask_{i}.png')
-
-
 def dice_loss(pred, target, smooth=1.):
     pred = pred.contiguous()
     target = target.contiguous()
